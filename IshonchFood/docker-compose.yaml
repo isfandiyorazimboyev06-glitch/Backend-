@@ -1,0 +1,17 @@
+services:
+web:
+build: .
+container_name: drf_app
+command: >
+sh -c "
+python manage.py migrate &&
+gunicorn config.wsgi:application --bind 0.0.0.0:8000
+"
+ports:
+- "8000:8000"
+volumes:
+- .:/app
+- sqlite_data:/app/data
+
+volumes:
+sqlite_data:
