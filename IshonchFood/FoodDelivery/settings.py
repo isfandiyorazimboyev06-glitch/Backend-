@@ -186,7 +186,7 @@ SPECTACULAR_SETTINGS = {
        #'filter': True, # Quick search filter bar
     },
 
-    # 💡 Use the default theme stylesheet so the dark mode utility scripts can read properties correctly
+    # Use the default theme stylesheet so the dark mode utility scripts can read properties correctly
     'SWAGGER_UI_THEME': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css',
     
     # This automatically drops a script onto the page to let them switch manually!
