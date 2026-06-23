@@ -10,6 +10,20 @@ from .serializers import RestaurantSerializer, MenuItemSerializer, CategorySeria
 from drf_spectacular.utils import extend_schema
 
 
+# Get ALL MenuItems Swagger
+@extend_schema(
+    methods=['GET'],
+    responses={200: MenuItemSerializer(many=True)},
+    description="Retrieve a list of all menu items.",
+    tags=['Menu Items']
+)
+@extend_schema(
+    methods=['POST'],
+    request=MenuItemSerializer,
+    responses={201: MenuItemSerializer},
+    description="Create a new menu item.",
+    tags=['Menu Items']
+)
 # Get ALL MenuItems
 @api_view(['GET','POST'])
 def get_all_menuitems(request):
@@ -24,7 +38,13 @@ def get_all_menuitems(request):
         deserializer.save()
         return Response(deserializer.data, status=status.HTTP_201_CREATED)
 
-
+# Get Single MenuItems Swagger
+@extend_schema(
+    methods=['GET'],
+    responses={200: MenuItemSerializer()},
+    description="Retrieve a list of all menu items.",
+    tags=['Menu Items']
+)
 # Get Single MenuItem
 @api_view(['GET'])
 def get_single_menuitem(request, id):
@@ -33,7 +53,20 @@ def get_single_menuitem(request, id):
     return Response(serializer.data,status=status.HTTP_200_OK)
 
 
-
+# Get ALL Categories Swagger
+@extend_schema(
+    methods=['GET'],
+    responses={200: CategorySerializer(many=True)},
+    description="Retrieve a list of all categories.",
+    tags=['Category']
+)
+@extend_schema(
+    methods=['POST'],
+    request=CategorySerializer,
+    responses={201: CategorySerializer},
+    description="Create a new category.",
+    tags=['Category']
+)
 # Get ALL Categories
 @api_view(['GET','POST'])
 def get_all_categories(request):
@@ -48,6 +81,12 @@ def get_all_categories(request):
         deserializer.save()
         return Response(deserializer.data,status=status.HTTP_201_CREATED)
 
+# Get Single Categories Swagger
+@extend_schema(
+    responses={200: CategorySerializer},
+    description="Retrieve a single category by its ID.",
+    tags=['Category']
+)
 # Get Single Category
 @api_view(['GET'])
 def get_single_category(request,id):
@@ -56,6 +95,20 @@ def get_single_category(request,id):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# GET ALL Restaurants Swagger
+@extend_schema(
+    methods=['GET'],
+    responses={200: RestaurantSerializer(many=True)},
+    description="Retrieve a list of all restaurants.",
+    tags=['Restaurants']
+)
+@extend_schema(
+    methods=['POST'],
+    request=RestaurantSerializer,
+    responses={201: RestaurantSerializer},
+    description="Register a new restaurant.",
+    tags=['Restaurants']
+)
 # GET ALL Restaurants
 @api_view(['GET','POST'])
 def get_all_restaurants(request):
@@ -70,6 +123,12 @@ def get_all_restaurants(request):
         deserializer.save()
         return Response(deserializer.data, status = status.HTTP_201_CREATED)
 
+# Get Single Restaurant Swagger
+@extend_schema(
+    responses={200: RestaurantSerializer},
+    description="Retrieve a single restaurant by its UUID.",
+    tags=['Restaurants']
+)
 # Get Single Restaurant
 @api_view(['GET'])
 def get_single_restaurant(request, uuid):

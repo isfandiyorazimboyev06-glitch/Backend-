@@ -159,14 +159,64 @@ REST_FRAMEWORK = {
 
 # Swagger UI configuration meta-data
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'FoodExpress — Restaurant & Menu Service API',
-    'DESCRIPTION': 'Internal & External Catalog Management APIs',
+    'TITLE': 'Ishonch Food Delivery API Swagger',
+    'DESCRIPTION': 'Comprehensive API documentation for the IshonchFood backend system.',
     'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    'SERVE_INCLUDE_SCHEMA': False, # Setting this to False hides the schema endpoint itself
+
+    #  Loads a theme that supports native light/dark switching hooks
+    'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5',
+
+    # Make sure you aren't overriding component settings to be hidden
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True, # Keeps individual endpoints bookmarkable in the browser URL bar
+        'displayOperationId': False, # Hides the internal technical Python function names from the UI
+        'defaultModelsExpandDepth': 1, # Keeps data models neatly collapsed by default at the bottom of the page
+        'defaultModelRendering': 'model',  # Shows the data model structure
+        'displayRequestDuration': True, # Shows a timer tracking exactly how long an API request takes to return
+
+       #'alpha' sorts your endpoints alphabetically within their tags
+       #'method' sorts them by HTTP action (GET, POST, PUT, DELETE)
+        'operationsSorter': 'alpha', 
+       #'alpha' sorts the main sections (Tags) alphabetically
+        'tagsSorter': 'alpha',
+
+        'docExpansion': 'list',        # Endpoints load open and visible
+       #'persistAuthorization': True,  # Remembers JWT tokens on refresh
+       #'filter': True, # Quick search filter bar
+    },
+
+    # 💡 Use the default theme stylesheet so the dark mode utility scripts can read properties correctly
+    'SWAGGER_UI_THEME': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css',
+    
+    # This automatically drops a script onto the page to let them switch manually!
+    'SWAGGER_UI_THEME_EXTRA': [
+        'https://cdn.jsdelivr.net/npm/swagger-ui-dark-mode-toggle@1.0.1/dist/swagger-ui-dark-mode-toggle.css',
+    ],
+    'SWAGGER_UI_JS': [
+        'https://cdn.jsdelivr.net/npm/swagger-ui-dark-mode-toggle@1.0.1/dist/swagger-ui-dark-mode-toggle.js',
+    ],
+    
+
+#     'TAGS': [
+#     {
+#         'name': 'Category',
+#         'description': 'Category management endpoints. These APIs allow you to create, retrieve, and manage product categories within the system.',
+#     },
+#     {
+#         'name': 'Restaurants',
+#         'description': 'Operations involving restaurant registration, profile handling, and status updates.',
+#     },
+#     {
+#         'name': 'Menu Items',
+#         'description': 'Endpoints dedicated to managing catalog items, pricing structures, and discounts.',
+#     },
+# ],
+
     # This enables the Authorize button in Swagger for Bearer JWT Tokens
     'SECURITY': [{
         'BearerAuth': [],
     }],
-    'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENT_SPLIT_REQUEST': True,# Splits your data schemas into two separate variants: one for creating (POST/PUT) and one for reading (GET)
 }
 
