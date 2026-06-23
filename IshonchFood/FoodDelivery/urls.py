@@ -26,5 +26,5 @@ urlpatterns = [
 
     # Swagger Schema & UI Routes
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'), # Target: http://localhost:8001/docs
+    path('docs', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'), # Target: http://localhost:8001/docs
 ]
