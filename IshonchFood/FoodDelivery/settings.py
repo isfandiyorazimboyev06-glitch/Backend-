@@ -57,11 +57,13 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',
     'IshonchEat',
+    'storages',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # Eng tepada turishi kerak
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # <-- Add this right here!
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -140,7 +142,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+
 
 
 
@@ -220,3 +222,66 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,# Splits your data schemas into two separate variants: one for creating (POST/PUT) and one for reading (GET)
 }
 
+
+# IF DEBUG SWITCH (LOCAL VS PRODUCTION)
+if DEBUG:
+    STATIC_URL = 'static/'
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+   
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+    
+    # Only include the directory if it actually exists on the disk
+    _global_static = os.path.join(BASE_DIR, 'static')
+    if os.path.exists(_global_static):
+        STATICFILES_DIRS = [_global_static]
+    else:
+        STATICFILES_DIRS = []
+
+    # Use Django's default local file storage
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+else:
+    # --- PRODUCTION (WHITENOISE + AWS S3) ---
+    # AWS S3 Settings
+    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = env('REGION_NAME')  # Change to your bucket's region
+
+
+    # Prevents query string tokens from cluttering public URLs
+    AWS_QUERYSTRING_AUTH = False 
+
+    # Base URL domains for S3
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    
+    # Subfolder organization inside the bucket
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+
+    STORAGES = {
+        # Media files (Admin image uploads go here)
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "location": "media",
+            },
+        },
+        
+        # Static files (CSS, JS, Admin assets go here)
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "location": "static",
+            },
+        },
+    }

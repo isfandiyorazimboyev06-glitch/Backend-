@@ -7,12 +7,13 @@ class Restaurant(models.Model):
 
     # Auth servisdagi userId uchun maydon (FK emas, shunchaki Integer yoki UUID bo'lishi mumkin)
     # Agar u yoqda ham UUID bo'lsa, UUIDField qiling, agar oddiy raqam bo'lsa IntegerField
-    owner_user_id = models.CharField(max_length=255, db_index=True) # db_index qidiruvni tezlashtiradi
+    owner_user_id = models.IntegerField() # db_index qidiruvni tezlashtiradi
 
 
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     address = models.URLField(max_length=500)
+    restaurant_img = models.ImageField(upload_to='restaurants/', blank=True, null=True)
     is_open = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -21,7 +22,8 @@ class Restaurant(models.Model):
         return self.name
 
 class Category(models.Model):
-    # id is autometically defined
+    # Manually defining the default Django behavior
+    id = models.BigAutoField(primary_key=True) 
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='categories')
     name = models.CharField(max_length=100)
     sort_order = models.PositiveIntegerField(default=0)
@@ -36,7 +38,8 @@ class Category(models.Model):
         return f"{self.restaurant.name} - {self.name}"
 
 class MenuItem(models.Model):
-    # id is autometically defined
+    # Manually defining the default Django behavior
+    id = models.BigAutoField(primary_key=True) 
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='menu_items')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='items')
     name = models.CharField(max_length=255)
@@ -46,10 +49,10 @@ class MenuItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     new_price = models.DecimalField(max_digits=10, decimal_places=2)
     discount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.BooleanField(default=True)
+    discount_status = models.BooleanField(default=True)
     promotion = models.CharField(max_length=255)
 
-    image_url = models.URLField(max_length=500, blank=True, null=True)
+    img_product = models.ImageField(upload_to='products/', blank=True, null=True)
     delivery_time=models.CharField(max_length=255,blank=True,null=True)
 
     def __str__(self):

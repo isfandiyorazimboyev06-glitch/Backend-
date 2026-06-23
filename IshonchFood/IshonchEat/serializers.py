@@ -4,7 +4,7 @@ from .models import Restaurant, Category, MenuItem
 class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
-        fields = ['id','owner_user_id','name','description','address','is_open','created_at']
+        fields = ['id','owner_user_id','name','description','address','is_open','created_at','restaurant_img']
         read_only_fields = ['id','created_at','owner_user_id']
         # owner_user_id ni requestdan emas, tokendan olamiz!
 
@@ -24,11 +24,11 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'restaurant', 'category',
             'name', 'description',
             'price', 'new_price', 'discount',
-            'status', 'promotion',
-            'image_url', 'delivery_time'
+            'discount_status', 'promotion',
+            'img_product', 'delivery_time'
         ]
 
 class PopularPromotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuItem
-        fields = ['id', 'restaurant','name','image_url','promotion']
+        fields = ['id', 'restaurant','name','img_product','promotion']
