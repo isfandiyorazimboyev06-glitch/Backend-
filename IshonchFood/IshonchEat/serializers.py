@@ -28,7 +28,7 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'image_url', 'delivery_time'
         ]
 
-class PopularPromotionSerializer(serailizers.ModelSerializer)
+class PopularPromotionSerializer(serailizers.ModelSerializer):
     class Meta:
         model = MenuItem
         fields = ['id', 'restaurant','name','image_url','promotion']
