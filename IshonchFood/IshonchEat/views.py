@@ -5,7 +5,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 
 from .models import Restaurant, MenuItem, Category
-from .serializers import RestaurantSerializer, MenuItemSerializer, CategorySerializer
+from .serializers import RestaurantSerializer, MenuItemSerializer, CategorySerializer, PopularPromotionSerializer
 
 from drf_spectacular.utils import extend_schema
 
@@ -135,6 +135,27 @@ def get_single_restaurant(request, uuid):
     restaurant = get_object_or_404(Restaurant, id=uuid)
     serializer = RestaurantSerializer(restaurant)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+# GET ALL Popular Products Swagger
+# @extend_schema(
+#     methods=['GET'],
+#     responses={200: PopularPromotionSerializer(many=True)},
+#     description="Retrieve a list of all popular promotions.",
+#     tags=['Popular Promotion']
+# )
+# # Get All Popular promotions
+# @api_view()
+# def get_popular_promotions(request):
+#     popular_items = MenuItems.objects.select_related('').all
+
+
+
+
         
 
 

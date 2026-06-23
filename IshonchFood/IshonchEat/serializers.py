@@ -14,7 +14,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['restaurant','name','sort_order']
+        fields = ['id','restaurant','name','sort_order']
 
 class MenuItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,3 +27,8 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'status', 'promotion',
             'image_url', 'delivery_time'
         ]
+
+class PopularPromotionSerializer(serailizers.ModelSerializer)
+    class Meta:
+        model = MenuItem
+        fields = ['id', 'restaurant','name','image_url','promotion']
