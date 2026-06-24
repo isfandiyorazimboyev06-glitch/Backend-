@@ -20,7 +20,7 @@ from drf_spectacular.utils import extend_schema
 @extend_schema(
     methods=['POST'],
     request=MenuItemSerializer,
-    responses={201: MenuItemSerializer},
+    responses={201: MenuItemSerializer()},
     description="Create a new menu item.",
     tags=['Menu Items']
 )
@@ -34,7 +34,7 @@ def get_all_menuitems(request):
     
     elif request.method == 'POST':
         deserializer = MenuItemSerializer(data=request.data)
-        deserializer.is_valid(raise_excaption=True)
+        deserializer.is_valid(raise_exception=True)
         deserializer.save()
         return Response(deserializer.data, status=status.HTTP_201_CREATED)
 
@@ -63,7 +63,7 @@ def get_single_menuitem(request, id):
 @extend_schema(
     methods=['POST'],
     request=CategorySerializer,
-    responses={201: CategorySerializer},
+    responses={201: CategorySerializer()},
     description="Create a new category.",
     tags=['Category']
 )
@@ -77,13 +77,14 @@ def get_all_categories(request):
 
     elif request.method == 'POST':
         deserializer = CategorySerializer(data=request.data)
-        deserializer.is_valid(raise_excaption=True)
+        deserializer.is_valid(raise_exception=True)
         deserializer.save()
         return Response(deserializer.data,status=status.HTTP_201_CREATED)
 
 # Get Single Categories Swagger
 @extend_schema(
-    responses={200: CategorySerializer},
+    methods=['GET'],
+    responses={200: CategorySerializer()},
     description="Retrieve a single category by its ID.",
     tags=['Category']
 )
@@ -105,7 +106,7 @@ def get_single_category(request,id):
 @extend_schema(
     methods=['POST'],
     request=RestaurantSerializer,
-    responses={201: RestaurantSerializer},
+    responses={201: RestaurantSerializer()},
     description="Register a new restaurant.",
     tags=['Restaurants']
 )
@@ -125,6 +126,7 @@ def get_all_restaurants(request):
 
 # Get Single Restaurant Swagger
 @extend_schema(
+    methods=['GET'],
     responses={200: RestaurantSerializer},
     description="Retrieve a single restaurant by its UUID.",
     tags=['Restaurants']
@@ -135,6 +137,9 @@ def get_single_restaurant(request, uuid):
     restaurant = get_object_or_404(Restaurant, id=uuid)
     serializer = RestaurantSerializer(restaurant)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
 
 
 

@@ -13,7 +13,7 @@ class Restaurant(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     address = models.URLField(max_length=500)
-    restaurant_img = models.ImageField(upload_to='restaurants/', blank=True, null=True)
+    restaurant_img = models.ImageField(upload_to='restaurant/', blank=True, null=True)
     is_open = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -47,8 +47,8 @@ class MenuItem(models.Model):
 
     # Pul miqdori uchun har doim DecimalField ishlatiladi
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    new_price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount = models.DecimalField(max_digits=10, decimal_places=2)
+    new_price = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
+    discount = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
     discount_status = models.BooleanField(default=True)
     promotion = models.CharField(max_length=255)
 
