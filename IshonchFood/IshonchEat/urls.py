@@ -9,14 +9,17 @@ urlpatterns = [
     # Get Single MenuItem
     path('single-menu-item/<int:id>',views.get_single_menuitem, name='get_single_menuitem'),
 
-    # GET Popular Menu items
-    path('menu-items/popular', views.popular_menu_items, name="popular-menu-items"),
+    # GET, POST and DELETE Popular Menu items
+    path("ads", views.popular_menu_items),
+    path("ads/<int:ad_id>",views.delete_advertisement),
+
+
 
     # GET ALL Categories
     path('categories',views.get_all_categories, name='get_all_categories'),
 
     # GET Single Category
-    path('category/<int:id>',views.get_single_category, name='get_single_category'),
+   # path('category/<int:id>',views.get_single_category, name='get_single_category'),
 
     # GET ALL Restaurant
     path('restaurants',views.get_all_restaurants, name='get_all_restaurants'),

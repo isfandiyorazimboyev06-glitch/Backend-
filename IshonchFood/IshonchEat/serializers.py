@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Restaurant, Category, MenuItem
+from .models import Restaurant, Category, MenuItem, Advertisement
 
 class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,7 +28,8 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'img_product', 'delivery_time'
         ]
 
-class PopularPromotionSerializer(serializers.ModelSerializer):
+class AdvertisementSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MenuItem
-        fields = ['id', 'restaurant','name','img_product','promotion']  
+        model = Advertisement
+        fields = ['id', 'restaurant','image_ads','promotion']  
+

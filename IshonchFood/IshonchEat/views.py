@@ -4,10 +4,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
-from .models import Restaurant, MenuItem, Category
-from .serializers import RestaurantSerializer, MenuItemSerializer, CategorySerializer, PopularPromotionSerializer
+from .models import Restaurant, MenuItem, Category, Advertisement
+from .serializers import RestaurantSerializer, MenuItemSerializer, CategorySerializer, AdvertisementSerializer
 
 from drf_spectacular.utils import extend_schema
+
+
 
 
 # Get ALL MenuItems Swagger
@@ -186,21 +188,48 @@ def restaurants_by_category(request, category_name):
 
 # GET ALL Popular Products Swagger
 @extend_schema(
-    methods=['GET'],
-    responses={200: PopularPromotionSerializer(many=True)},
-    description="Retrieve a list of all popular promotions.",
-    tags=['Popular Products']
+    request=AdvertisementSerializer,
+    responses={200: AdvertisementSerializer(many=True), 201: AdvertisementSerializer(),},
+    description="Get and create advertisements",
+    tags=['Popular Ads']
 )
-# Get All Popular Products
-@api_view()
+
+# Get and POST All Popular Products
+@api_view(['GET','POST'])
 def popular_menu_items(request):
-    items = MenuItem.objects.filter(
-        popular = True
-    ).select_related("restaurant", "category")
+    if request.method == 'GET':
+        ads = Advertisement.objects.filter(is_active=True)
+        serializer = AdvertisementSerializer(ads,many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    elif request.method == 'POST':
+        deserializer = AdvertisementSerializer(data=request.data)
+        deserializer.is_valid(raise_exception=True)
+        deserializer.save()
+        return Response(deserializer.data, status=status.HTTP_201_CREATED)
 
-    serializer = MenuItemSerializer(items, many=True)
 
-    return Response(serializer.data, status=status.HTTP_200_OK)
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+@extend_schema(
+    methods=['DELETE'],
+    parameters=[
+        OpenApiParameter(
+            name="ad_id",
+            type=int,
+            location=OpenApiParameter.PATH,
+            description="Advertisement ID to delete"
+        )
+    ],
+    responses={204:None},
+    description="Delete an advertisement",
+    tags=["Popular Ads"]
+)
+@api_view(["DELETE"])
+def delete_advertisement(request,ad_id):
+    ads = get_object_or_404(Advertisement, id=ad_id)
+    ads.delete()
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 
 

@@ -54,11 +54,23 @@ class MenuItem(models.Model):
 
     img_product = models.ImageField(upload_to='products/', blank=True, null=True)
     delivery_time=models.CharField(max_length=255,blank=True,null=True)
-    popular = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name + "-----" + self.category.name
 
 
+class Advertisement(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    restaurant = models.ForeignKey(
+        Restaurant, on_delete=models.CASCADE, related_name="advertisements"
+    )
+    image_ads = models.ImageField(upload_to="ads/")
+    promotion = models.CharField(max_length=255)
+
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.restaurant.name} - {self.promotion}"
 
 
