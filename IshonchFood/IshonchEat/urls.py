@@ -19,7 +19,13 @@ urlpatterns = [
     path('restaurants',views.get_all_restaurants, name='get_all_restaurants'),
 
     # GET Single Restaurant
-    path('restaurant/<uuid:uuid>', views.get_single_restaurant, name='get_single_restaurant')
+    path('restaurant/<uuid:uuid>', views.get_single_restaurant, name='get_single_restaurant'),
+
+    # GET Restaurant menu all items by restaurant_id
+    path('restaurants/<uuid:restaurant_id>/menu', views.restaurant_menu, name='restaurant-menu'),
+
+    # Get Restaurants itself by category id
+    path('categories/<str:category_name>/restaurants',views.restaurants_by_category, name='restaurant-by-category') 
 
     # # Restoranlar
     # path('restaurants/', views.restaurant_list_create, name='restaurant-list-create'),
