@@ -9,6 +9,9 @@ urlpatterns = [
     # Get Single MenuItem
     path('single-menu-item/<int:id>',views.get_single_menuitem, name='get_single_menuitem'),
 
+    # GET Popular Menu items
+    path('menu-items/popular', views.popular_menu_items, name="popular-menu-items"),
+
     # GET ALL Categories
     path('categories',views.get_all_categories, name='get_all_categories'),
 

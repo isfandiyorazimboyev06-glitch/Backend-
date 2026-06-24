@@ -185,16 +185,22 @@ def restaurants_by_category(request, category_name):
 
 
 # GET ALL Popular Products Swagger
-# @extend_schema(
-#     methods=['GET'],
-#     responses={200: PopularPromotionSerializer(many=True)},
-#     description="Retrieve a list of all popular promotions.",
-#     tags=['Popular Promotion']
-# )
-# # Get All Popular promotions
-# @api_view()
-# def get_popular_promotions(request):
-#     popular_items = MenuItems.objects.select_related('').all
+@extend_schema(
+    methods=['GET'],
+    responses={200: PopularPromotionSerializer(many=True)},
+    description="Retrieve a list of all popular promotions.",
+    tags=['Popular Products']
+)
+# Get All Popular Products
+@api_view()
+def popular_menu_items(request):
+    items = MenuItem.objects.filter(
+        popular = True
+    ).select_related("restaurant", "category")
+
+    serializer = MenuItemSerializer(items, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
