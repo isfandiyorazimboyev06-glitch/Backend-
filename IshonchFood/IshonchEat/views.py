@@ -4,201 +4,33 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
-from .models import Restaurant, MenuItem, Category, Advertisement
-from .serializers import RestaurantSerializer, MenuItemSerializer, CategorySerializer, AdvertisementSerializer
+from .models import Advertisement, Category, Restaurant, CategoryMenu, MenuItem
+from .serializers import AdvertisementSerializer, CategorySerializer,  RestaurantSerializer,CategoryMenuSerializer, MenuItemSerializer 
 
 from drf_spectacular.utils import extend_schema
 
 
-
-
-# Get ALL MenuItems Swagger
+#1. Advertisement Api end points GET, POST, DELETE
 @extend_schema(
     methods=['GET'],
-    responses={200: MenuItemSerializer(many=True)},
-    description="Retrieve a list of all menu items.",
-    tags=['Menu Items']
+    responses={200: AdvertisementSerializer(many=True)},
+    description = "Get popular menu items",
+    tags = ["Popular Ads"]
 )
+
 @extend_schema(
     methods=['POST'],
-    request=MenuItemSerializer,
-    responses={201: MenuItemSerializer()},
-    description="Create a new menu item.",
-    tags=['Menu Items']
+    request = AdvertisementSerializer,
+    responses={201: AdvertisementSerializer()},
+    description="Post popular menu items",
+    tags = ["Popular Ads"]
 )
 
-# Get ALL MenuItems
-@api_view(['GET','POST'])
-def get_all_menuitems(request):
-    if request.method == 'GET':
-        menu_items = MenuItem.objects.select_related('restaurant','category').all()
-        serializer = MenuItemSerializer(menu_items,many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    elif request.method == 'POST':
-        deserializer = MenuItemSerializer(data=request.data)
-        deserializer.is_valid(raise_exception=True)
-        deserializer.save()
-        return Response(deserializer.data, status=status.HTTP_201_CREATED)
-
-# Get Single MenuItems Swagger
-@extend_schema(
-    methods=['GET'],
-    responses={200: MenuItemSerializer()},
-    description="Retrieve a list of all menu items.",
-    tags=['Menu Items']
-)
-# Get Single MenuItem
-@api_view(['GET'])
-def get_single_menuitem(request, id):
-    menu_item = get_object_or_404(MenuItem, id=id)
-    serializer = MenuItemSerializer(menu_item)
-    return Response(serializer.data,status=status.HTTP_200_OK)
-
-
-# Get ALL Categories Swagger
-@extend_schema(
-    methods=['GET'],
-    responses={200: CategorySerializer(many=True)},
-    description="Retrieve a list of all categories.",
-    tags=['Category']
-)
-@extend_schema(
-    methods=['POST'],
-    request=CategorySerializer,
-    responses={201: CategorySerializer()},
-    description="Create a new category.",
-    tags=['Category']
-)
-# Get ALL Categories
-@api_view(['GET','POST'])
-def get_all_categories(request):
-    if request.method == 'GET':
-        categories = Category.objects.select_related('restaurant').all()
-        serializer = CategorySerializer(categories,many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    elif request.method == 'POST':
-        deserializer = CategorySerializer(data=request.data)
-        deserializer.is_valid(raise_exception=True)
-        deserializer.save()
-        return Response(deserializer.data,status=status.HTTP_201_CREATED)
-
-# Get Single Categories Swagger
-@extend_schema(
-    methods=['GET'],
-    responses={200: CategorySerializer()},
-    description="Retrieve a single category by its ID.",
-    tags=['Category']
-)
-# Get Single Category
-@api_view(['GET'])
-def get_single_category(request,id):
-    category = get_object_or_404(Category, id=id)
-    serializer = CategorySerializer(category)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# GET ALL Restaurants Swagger
-@extend_schema(
-    methods=['GET'],
-    responses={200: RestaurantSerializer(many=True)},
-    description="Retrieve a list of all restaurants.",
-    tags=['Restaurants']
-)
-@extend_schema(
-    methods=['POST'],
-    request=RestaurantSerializer,
-    responses={201: RestaurantSerializer()},
-    description="Register a new restaurant.",
-    tags=['Restaurants']
-)
-# GET ALL Restaurants
-@api_view(['GET','POST'])
-def get_all_restaurants(request):
-    if request.method == 'GET':
-        restaurant = Restaurant.objects.all()
-        serializer = RestaurantSerializer(restaurant, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    elif request.method == 'POST':
-        deserializer = RestaurantSerializer(data=request.data)
-        deserializer.is_valid()
-        deserializer.save()
-        return Response(deserializer.data, status = status.HTTP_201_CREATED)
-
-# Get Single Restaurant Swagger
-@extend_schema(
-    methods=['GET'],
-    responses={200: RestaurantSerializer},
-    description="Retrieve a single restaurant by its UUID.",
-    tags=['Restaurants']
-)
-# Get Single Restaurant
-@api_view(['GET'])
-def get_single_restaurant(request, uuid):
-    restaurant = get_object_or_404(Restaurant, id=uuid)
-    serializer = RestaurantSerializer(restaurant)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
-# GET Restaurant menu all items by restaurant_id
-@extend_schema(
-    methods = ['GET'],
-    responses={200: MenuItemSerializer(many=True)},
-    description="Get all menu items for a restaurant",
-    tags=["Find menu all items by restaurant_id"]
-)
-
-@api_view(['GET'])
-def restaurant_menu(request, restaurant_id):
-    restaurant = get_object_or_404(Restaurant, id=restaurant_id)
-
-    menu_items = MenuItem.objects.filter(
-        restaurant = restaurant
-    ).select_related("category")
-
-    serializer = MenuItemSerializer(menu_items, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# Get Restaurants itself by category id
-@extend_schema(
-    methods=['GET'],
-    responses={200:RestaurantSerializer(many=True)},
-    description="Get Restaurants by category_id",
-    tags=["Filter by Category"],
-)
-@api_view(["GET"])
-def restaurants_by_category(request, category_name):
-    restaurants = Restaurant.objects.filter(
-        categories__name__iexact = category_name
-    ).distinct()
-
-    serializer = RestaurantSerializer(
-        restaurants, many=True
-    )
-
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
-
-
-# GET ALL Popular Products Swagger
-@extend_schema(
-    request=AdvertisementSerializer,
-    responses={200: AdvertisementSerializer(many=True), 201: AdvertisementSerializer(),},
-    description="Get and create advertisements",
-    tags=['Popular Ads']
-)
-
-# Get and POST All Popular Products
+# Get and Post All Popular Products
 @api_view(['GET','POST'])
 def popular_menu_items(request):
     if request.method == 'GET':
-        ads = Advertisement.objects.filter(is_active=True)
+        ads = Advertisement.objects.filter(is_active=True).select_related('restaurant')
         serializer = AdvertisementSerializer(ads,many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == 'POST':
@@ -223,12 +55,216 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
     description="Delete an advertisement",
     tags=["Popular Ads"]
 )
-@api_view(["DELETE"])
+@api_view(["DELETE"]) # Add Put method
 def delete_advertisement(request,ad_id):
     ads = get_object_or_404(Advertisement, id=ad_id)
     ads.delete()
 
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+#2. Get and Post General Category
+@extend_schema(
+    methods=['GET'],
+    responses={200: CategorySerializer(many=True)},
+    description="Get All General Category",
+    tags=['General Category']
+)
+@extend_schema(
+    methods=['POST'],
+    request=CategorySerializer,
+    responses={201:CategorySerializer()},
+    description = "Post A New General Category",
+    tags=['General Category']
+)
+
+@api_view(['GET','POST'])
+def general_category(request):
+    if request.method == 'GET':
+        categories = Category.objects.values('id','name','sort_order') # auto parse will recieve dict
+        serializer = CategorySerializer(categories,many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    elif request.method == 'POST':
+        deserializer = CategorySerializer(data=request.data)
+        deserializer.is_valid(raise_exception=True)
+        deserializer.save()
+        return Response(deserializer.data, status=status.HTTP_201_CREATED)
+
+
+# Delete and Put General Category
+
+
+
+
+
+#3. GET ALL Restaurants Swagger
+@extend_schema(
+    methods=['GET'],
+    responses={200: RestaurantSerializer(many=True)},
+    description="Retrieve a list of all restaurants.",
+    tags=['Restaurants']
+)
+@extend_schema(
+    methods=['POST'],
+    request=RestaurantSerializer,
+    responses={201: RestaurantSerializer()},
+    description="Register a new restaurant.",
+    tags=['Restaurants']
+)
+
+# GET ALL Restaurants
+@api_view(['GET','POST'])
+def all_restaurants(request):
+    if request.method == 'GET':
+        restaurant = Restaurant.objects.select_related('categories').only('id','owner_user_id','categories','name','description','address','restaurant_img',' is_open','created_at','phone_number')
+        serializer = RestaurantSerializer(restaurant, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'POST':
+        deserializer = RestaurantSerializer(data=request.data)
+        deserializer.is_valid()
+        deserializer.save()
+        return Response(deserializer.data, status = status.HTTP_201_CREATED)
+
+# Get Single Restaurant Swagger
+@extend_schema(
+    methods=['GET'],
+    responses={200: RestaurantSerializer},
+    description="Retrieve a single restaurant by its UUID.",
+    tags=['Restaurants']
+)
+# Get Single Restaurant
+@api_view(['GET']) # add delete, put
+def single_restaurant(request, uuid):
+    restaurant = get_object_or_404(Restaurant, id=uuid)
+    serializer = RestaurantSerializer(restaurant)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+#4. Get and Post ALL Menu Categories of Restaurant Swagger
+@extend_schema(
+    methods=['GET'],
+    responses={200: CategoryMenuSerializer(many=True)},
+    description="Retrieve a list of all categories.",
+    tags=['Category Menu of Restaurant']
+)
+@extend_schema(
+    methods=['POST'],
+    request=CategoryMenuSerializer,
+    responses={201: CategoryMenuSerializer()},
+    description="Create a new category.",
+    tags=['Category Menu of Restaurant']
+)
+
+# Get and Post ALL Menu Categories of Restaurant
+@api_view(['GET','POST'])
+def all_categories_menu(request):
+    if request.method == 'GET':
+        categories = CategoryMenu.objects.select_related('restaurant').only(
+            # Fields from CategoryMenu
+            'id','restaurant','name','sort_order',
+            # Fields from the joined Restaurant table (using __)
+            'restaurant__id', 'restaurant__owner_user_id','restaurant__categories','restaurant__name',
+            'restaurant__description', 'restaurant__address', 'restaurant__restaurant_img', 'restaurant__is_open',
+            'restaurant__created_at', 'restaurant__phone_number',
+            )
+        serializer = CategoryMenuSerializer(categories,many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        deserializer = CategoryMenuSerializer(data=request.data)
+        deserializer.is_valid(raise_exception=True)
+        deserializer.save()
+        return Response(deserializer.data,status=status.HTTP_201_CREATED)
+
+
+
+
+#5. Get and Post ALL MenuItems Swagger
+@extend_schema(
+    methods=['GET'],
+    responses={200: MenuItemSerializer(many=True)},
+    description="Retrieve a list of all menu items.",
+    tags=['Menu Items']
+)
+@extend_schema(
+    methods=['POST'],
+    request=MenuItemSerializer,
+    responses={201: MenuItemSerializer()},
+    description="Create a new menu item.",
+    tags=['Menu Items']
+)
+# Get and Post ALL MenuItems
+@api_view(['GET','POST'])
+def menuitems(request):
+    if request.method == 'GET':
+        menu_items = MenuItem.objects.select_related('restaurant','category')
+        serializer = MenuItemSerializer(menu_items,many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'POST':
+        deserializer = MenuItemSerializer(data=request.data)
+        deserializer.is_valid(raise_exception=True)
+        deserializer.save()
+        return Response(deserializer.data, status=status.HTTP_201_CREATED)
+
+
+
+
+
+
+
+# # GET Restaurant menu all items by restaurant_id
+# @extend_schema(
+#     methods = ['GET'],
+#     responses={200: MenuItemSerializer(many=True)},
+#     description="Get all menu items for a restaurant",
+#     tags=["Find menu all items by restaurant_id"]
+# )
+
+# @api_view(['GET'])
+# def restaurant_menu(request, restaurant_id):
+#     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+
+#     menu_items = MenuItem.objects.filter(
+#         restaurant = restaurant
+#     ).select_related("category")
+
+#     serializer = MenuItemSerializer(menu_items, many=True)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# # Get Restaurants itself by category id
+# @extend_schema(
+#     methods=['GET'],
+#     responses={200:RestaurantSerializer(many=True)},
+#     description="Get Restaurants by category_id",
+#     tags=["Filter by Category"],
+# )
+# @api_view(["GET"])
+# def restaurants_by_category(request, category_name):
+#     restaurants = Restaurant.objects.filter(
+#         categories__name__iexact = category_name
+#     ).distinct()
+
+#     serializer = RestaurantSerializer(
+#         restaurants, many=True
+#     )
+
+#     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
 
 
 

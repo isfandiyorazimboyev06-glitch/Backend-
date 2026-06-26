@@ -3,35 +3,53 @@ from . import views
 
 urlpatterns = [
 
-    # Get All MenuItems
-    path('menu-items',views.get_all_menuitems,name='get_all_menuitems'),
-
-    # Get Single MenuItem
-    path('single-menu-item/<int:id>',views.get_single_menuitem, name='get_single_menuitem'),
-
-    # GET, POST and DELETE Popular Menu items
+    #1. GET, POST and DELETE Popular Menu items
     path("ads", views.popular_menu_items),
     path("ads/<int:ad_id>",views.delete_advertisement),
 
+    #2. GET, POST General Category of Restaurant
+    path("general-category", views.general_category, name='general_category'),
+
+    #3. GET ALL Restaurants
+    path('restaurants',views.all_restaurants, name='all_restaurants'),
+    path('restaurant/<uuid:uuid>', views.single_restaurant, name='single_restaurant'), # GET Single Restaurant
 
 
-    # GET ALL Categories
-    path('categories',views.get_all_categories, name='get_all_categories'),
+    #4. GET ALL Menu Categories of Restaurnat
+    path('menu-category',views.all_categories_menu, name='all_categories_menu'),
+
+    #5. Get All MenuItems of Restaurant
+    path('menu-items',views.menuitems,name='all_menuitems'),
+
+
+
+
+
+
+
+
+
+
+
+    # Get Single MenuItem
+    # path('single-menu-item/<int:id>',views.get_single_menuitem, name='get_single_menuitem'),
+
+ 
+
+
+
+    
 
     # GET Single Category
    # path('category/<int:id>',views.get_single_category, name='get_single_category'),
 
-    # GET ALL Restaurant
-    path('restaurants',views.get_all_restaurants, name='get_all_restaurants'),
 
-    # GET Single Restaurant
-    path('restaurant/<uuid:uuid>', views.get_single_restaurant, name='get_single_restaurant'),
 
     # GET Restaurant menu all items by restaurant_id
-    path('restaurants/<uuid:restaurant_id>/menu', views.restaurant_menu, name='restaurant-menu'),
+   # path('restaurants/<uuid:restaurant_id>/menu', views.restaurant_menu, name='restaurant-menu'),
 
     # Get Restaurants itself by category id
-    path('categories/<str:category_name>/restaurants',views.restaurants_by_category, name='restaurant-by-category') 
+   # path('categories/<str:category_name>/restaurants',views.restaurants_by_category, name='restaurant-by-category') 
 
     # # Restoranlar
     # path('restaurants/', views.restaurant_list_create, name='restaurant-list-create'),

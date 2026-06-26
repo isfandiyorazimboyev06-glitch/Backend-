@@ -1,20 +1,32 @@
 from rest_framework import serializers
-from .models import Restaurant, Category, MenuItem, Advertisement
+from .models import Advertisement, Category, CategoryMenu, Restaurant, MenuItem 
 
-class RestaurantSerializer(serializers.ModelSerializer):
+
+
+class AdvertisementSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Restaurant
-        fields = ['id','owner_user_id','name','description','address','is_open','created_at','restaurant_img']
-        read_only_fields = ['id','created_at','owner_user_id']
-        # owner_user_id ni requestdan emas, tokendan olamiz!
-
-
-
+        model = Advertisement
+        fields = ['id', 'restaurant','image_ads','promotion']  
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id','restaurant','name','sort_order']
+        fields = ['id','name']
+        
+class RestaurantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Restaurant
+        fields = ['id','owner_user_id','name','description','address','is_open','created_at','restaurant_img','categories']
+        read_only_fields = ['id','created_at','owner_user_id']
+        # owner_user_id ni requestdan emas, tokendan olamiz!
+
+
+class CategoryMenuSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategoryMenu
+        fields = ['id','restaurant','name']
+
+
 
 class MenuItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,8 +40,4 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'img_product', 'delivery_time'
         ]
 
-class AdvertisementSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Advertisement
-        fields = ['id', 'restaurant','image_ads','promotion']  
 
