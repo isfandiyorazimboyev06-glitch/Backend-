@@ -117,7 +117,17 @@ def general_category(request):
 @api_view(['GET','POST'])
 def all_restaurants(request):
     if request.method == 'GET':
-        restaurant = Restaurant.objects.select_related('categories').only('id','owner_user_id','categories','name','description','address','restaurant_img',' is_open','created_at','phone_number')
+        restaurant = Restaurant.objects.prefetch_related('categories').all().only(
+            'id',
+            'owner_user_id',
+            'name',
+            'description',
+            'address',
+            'restaurant_img',
+            'is_open',
+            'created_at',
+            'phone_number'
+        )
         serializer = RestaurantSerializer(restaurant, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
