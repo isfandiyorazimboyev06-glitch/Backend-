@@ -202,7 +202,7 @@ def all_categories_menu(request):
 @api_view(['GET','POST'])
 def menuitems(request):
     if request.method == 'GET':
-        menu_items = MenuItem.objects.select_related('restaurant','category')
+        menu_items = MenuItem.objects.select_related('category')
         serializer = MenuItemSerializer(menu_items,many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
