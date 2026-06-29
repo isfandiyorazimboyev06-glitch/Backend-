@@ -228,12 +228,16 @@ def menuitems(request):
 
 @api_view(['GET'])
 def restaurant_menu(request, restaurant_id):
+    # 1. Verify that the restaurant exists
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
 
+    # 2. Filter menu items by spanning across tables:
+    # Look at MenuItem -> menu category -> restaurant
     menu_items = MenuItem.objects.filter(
-        restaurant = restaurant
+        category__restaurant = restaurant
     ).select_related("category")
 
+    # 3. Serialize and return the records
     serializer = MenuItemSerializer(menu_items, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
