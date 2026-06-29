@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from .models import Advertisement, Category, Restaurant, CategoryMenu, MenuItem
 from .serializers import AdvertisementSerializer, CategorySerializer,  RestaurantSerializer,CategoryMenuSerializer, MenuItemSerializer 
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema,extend_schema_view,OpenApiParameter
 
 
 #1. Advertisement Api end points GET, POST, DELETE
@@ -40,27 +40,50 @@ def popular_menu_items(request):
         return Response(deserializer.data, status=status.HTTP_201_CREATED)
 
 
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-@extend_schema(
-    methods=['DELETE'],
-    parameters=[
-        OpenApiParameter(
-            name="ad_id",
-            type=int,
-            location=OpenApiParameter.PATH,
-            description="Advertisement ID to delete"
-        )
-    ],
-    responses={204:None},
-    description="Delete an advertisement",
-    tags=["Popular Ads"]
+@extend_schema_view(
+    put=extend_schema(
+        description="Update an exsiting advetisement's details completely using its ID",
+        parameters=[
+            OpenApiParameter(
+                name="ad_id",
+                type=int,
+                location=OpenApiParameter.PATH,
+                description="ID of the advertisement to update"
+            )
+        ],
+        request=AdvertisementSerializer,
+        responses={200:AdvertisementSerializer},
+        tags=['Popular Ads']
+    ),
+    delete=extend_schema(
+        description="Permanently remove an ads from the system using its ID.",
+        parameters=[
+            OpenApiParameter(
+                name="ad_id",
+                type=int,
+                location=OpenApiParameter.PATH,
+                description="Advertisement ID to delete"
+            )
+        ],
+        responses={204:None},
+        tags=["Popular Ads"]
+    )
+
 )
-@api_view(["DELETE"]) # Add Put method
+@api_view(["PUT","DELETE"]) 
 def delete_advertisement(request,ad_id):
     ads = get_object_or_404(Advertisement, id=ad_id)
-    ads.delete()
 
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    if request.method == "PUT":
+        serializer = AdvertisementSerializer(ads,data=request.data, partial=False)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == "DELETE":
+        ads.delete()
+        return Response({"detail":"Ads successfully deleted."},status=status.HTTP_204_NO_CONTENT)
 
 #2. Get and Post General Category
 @extend_schema(
@@ -88,6 +111,35 @@ def general_category(request):
         deserializer.is_valid(raise_exception=True)
         deserializer.save()
         return Response(deserializer.data, status=status.HTTP_201_CREATED)
+
+@extend_schema(
+    methods=['PUT'],
+    request=CategorySerializer,
+    responses={200:CategorySerializer},
+    description="Update A General Category",
+    tags=['General Category']
+)
+@extend_schema(
+    methods =['DELETE'],
+    responses={204,CategorySerializer},
+    description="DELETE A General Category ",
+    tags=['General Category']
+)
+@api_view(['PUT','DELETE'])
+def general_category_detail(request,id):
+    # Fetch the category or raise a 404 error if it doesn't exist
+    category = get_object_or_404(Category, id=pk)
+
+    # 1 HANDLE UPDATE (PUT)
+    if request.method == 'PUT':
+        serializer = CategorySerializer(category,data=request.data, partial=False)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    elif request.method == 'DELETE':
+        category.delete()
+        return Response({"detail":"A General Category successfully deleted."},status=status.HTTP_204_NO_CONTENT)
 
 
 # Delete and Put General Category
@@ -131,19 +183,52 @@ def all_restaurants(request):
         deserializer.save()
         return Response(deserializer.data, status = status.HTTP_201_CREATED)
 
-# Get Single Restaurant Swagger
-@extend_schema(
-    methods=['GET'],
-    responses={200: RestaurantSerializer},
-    description="Retrieve a single restaurant by its UUID.",
-    tags=['Restaurants']
+
+# Get Single Restaurant Swagger 
+@extend_schema_view(
+    get=extend_schema(
+            description="Fetch a restaurant's full profile details along with its nested category menus and items.",
+            responses={200: RestaurantSerializer},
+            tags=['Restaurants']
+    ),
+    put=extend_schema(
+        description="Modify an existing restaurant profile information using its UUID.",
+        request=RestaurantSerializer,
+        responses={200:RestaurantSerializer},
+        tags=['Restaurants']
+    ),
+    delete=extend_schema(
+        description="Permanently remove a restaurant profile from the delivery platform.",
+        responses={204:None},
+        tags=['Restaurants']
+    )
+
 )
 # Get Single Restaurant
-@api_view(['GET']) # add delete, put
+@api_view(['GET','PUT','DELETE']) 
 def single_restaurant(request, uuid):
-    restaurant = get_object_or_404(Restaurant.objects.prefetch_related('categories_menu__items'), id=uuid)
-    serializer = RestaurantSerializer(restaurant)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    # 1. HANDLE RETRIEVAL (GET) - Highly optimized with prefetching
+    if request.method == 'GET':
+        restaurant = get_object_or_404(Restaurant.objects.prefetch_related('categories_menu__items'), id=uuid)
+        serializer = RestaurantSerializer(restaurant)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # Fetch the flat record for mutations (PUT/DELETE)
+    restaurant = get_object_or_404(Restaurant,id=uuid)
+
+    # 2. HANDLE UPDATE (PUT)
+    if request.method == 'PUT':
+        serializer = RestaurantSerializer(restaurant,data=request.data,partial=False)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    # 3. HANDLE DELETION (DELETE)
+    elif request.method == 'DELETE':
+        restaurant.delete()
+        return Response({"detail":"Restaurant successfully deleted."},status=status.HTTP_204_NO_CONTENT)
+    
+    
 
 #4. Get and Post ALL Menu Categories of Restaurant Swagger
 @extend_schema(
@@ -160,18 +245,13 @@ def single_restaurant(request, uuid):
     tags=['Category Menu of Restaurant']
 )
 
+
 # Get and Post ALL Menu Categories of Restaurant
 @api_view(['GET','POST'])
 def all_categories_menu(request):
     if request.method == 'GET':
-        categories = CategoryMenu.objects.select_related('restaurant').only(
-            # Fields from CategoryMenu
-            'id','restaurant','name','sort_order',
-            # Fields from the joined Restaurant table (using __)
-            'restaurant__id', 'restaurant__owner_user_id','restaurant__categories','restaurant__name',
-            'restaurant__description', 'restaurant__address', 'restaurant__restaurant_img', 'restaurant__is_open',
-            'restaurant__created_at', 'restaurant__phone_number',
-            )
+        categories = CategoryMenu.objects.all().select_related('restaurant')
+            
         serializer = CategoryMenuSerializer(categories,many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -180,6 +260,36 @@ def all_categories_menu(request):
         deserializer.is_valid(raise_exception=True)
         deserializer.save()
         return Response(deserializer.data,status=status.HTTP_201_CREATED)
+
+
+@extend_schema_view(
+    put=extend_schema(
+        request=CategoryMenuSerializer,
+        responses={200:CategoryMenuSerializer},
+        tags=['Category Menu of Restaurant']
+    ),
+    delete=extend_schema(
+        responses={204:None},
+        tags=['Category Menu of Restaurant']
+    )
+)
+# DELETE and PUT Single Menu Categories of Restaurant
+@api_view(['PUT','DELETE'])
+def category_menu_detail(request,id):
+    category_menu = get_object_or_404(CategoryMenu, id=id)
+
+    if request.method == 'PUT':
+        serializer = CategoryMenuSerializer(category_menu,data=request.data,partial=False)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    elif request.method == 'DELETE':
+        category_menu.delete()
+
+        return Response({"detail":"Category Menu successfully deleted."},status=status.HTTP_204_NO_CONTENT)
+
+
 
 
 
@@ -212,13 +322,38 @@ def menuitems(request):
         deserializer.save()
         return Response(deserializer.data, status=status.HTTP_201_CREATED)
 
+@extend_schema_view(
+    put=extend_schema(
+        description='Update menu item by its id',
+        request=MenuItemSerializer,
+        responses=MenuItemSerializer(),
+        tags=['Menu Items']
+    ),
+    delete=extend_schema(
+        description='Delete menu item by its id',
+        responses={204:None},
+        tags=['Menu Items']
+    )
+)
+@api_view(['PUT','DELETE'])
+def menuitem_detail(request,id):
+    menuitem = get_object_or_404(MenuItem,id=id)
+    if request.method == 'PUT':
+        serializer = MenuItemSerializer(menuitem,data=request.data,partial=False)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    elif request.method == 'DELETE':
+        menuitem.delete()
+        return Response({'message':"Delete Menuite successfully"},status=status.HTTP_204_NO_CONTENT)
 
 
 
 
 
 
-# GET Restaurant menu all items by restaurant_id
+#6. GET Restaurant menu all items by restaurant_id
 @extend_schema(
     methods = ['GET'],
     responses={200: MenuItemSerializer(many=True)},
@@ -241,7 +376,29 @@ def restaurant_menu(request, restaurant_id):
     serializer = MenuItemSerializer(menu_items, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-# Get all menu items for a specific restaurant under a specific menu category section (e.g., Only Burgers from KFC).
+
+
+
+#7. Get Restaurants itself by category id
+@extend_schema(
+    methods=['GET'],
+    responses={200:RestaurantSerializer(many=True)},
+    description="Get Restaurants by category_id",
+    tags=["Filter restaurants by General Category"],
+)
+@api_view(["GET"])
+def restaurants_by_category(request, category_name):
+    restaurants = Restaurant.objects.filter(
+        categories__name__iexact = category_name
+    ).distinct()
+
+    serializer = RestaurantSerializer(
+        restaurants, many=True
+    )
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+#8. Get all menu items for a specific restaurant under a specific menu category section (e.g., Only Burgers from KFC).
 @extend_schema(
     methods=['GET'],
     responses={200:MenuItemSerializer(many=True)},
@@ -269,23 +426,7 @@ def menu_items_by_category(request,restaurant_id,category_menu_name):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# Get Restaurants itself by category id
-@extend_schema(
-    methods=['GET'],
-    responses={200:RestaurantSerializer(many=True)},
-    description="Get Restaurants by category_id",
-    tags=["Filter restaurants by General Category"],
-)
-@api_view(["GET"])
-def restaurants_by_category(request, category_name):
-    restaurants = Restaurant.objects.filter(
-        categories__name__iexact = category_name
-    ).distinct()
 
-    serializer = RestaurantSerializer(
-        restaurants, many=True
-    )
-    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
