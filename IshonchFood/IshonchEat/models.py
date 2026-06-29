@@ -4,6 +4,9 @@ import uuid
 
 
 
+
+
+
 # General Category (Global categories like Fast Food, Sweets, Sushe, etc.)
 class Category(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -15,6 +18,10 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+
+    
+
 
 # Restaurants
 class Restaurant(models.Model):
@@ -41,8 +48,6 @@ class Restaurant(models.Model):
     def __str__(self):
         return self.name
 
-    
-    
 # Advertisement Banner
 class Advertisement(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -57,8 +62,7 @@ class Advertisement(models.Model):
 
     def __str__(self):
         return f"{self.restaurant.name} - {self.promotion}"
-
-
+        
 
 # Category Menu of Restaurant (Internal categories like "Burgers", "Drinks")
 class CategoryMenu(models.Model):
@@ -80,14 +84,11 @@ class CategoryMenu(models.Model):
 
 
 
-
-
-
 # Restaurants MenuItem
 class MenuItem(models.Model):
     # Manually defining the default Django behavior
     id = models.BigAutoField(primary_key=True) 
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='menu_items')
+    #restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='menu_items')
     category = models.ForeignKey(CategoryMenu, on_delete=models.CASCADE, related_name='items')
     name = models.CharField(max_length=255)
     description = models.TextField(blank = True, null = True)

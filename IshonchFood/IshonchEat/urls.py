@@ -46,10 +46,14 @@ urlpatterns = [
 
 
     # GET Restaurant menu all items by restaurant_id
-   # path('restaurants/<uuid:restaurant_id>/menu', views.restaurant_menu, name='restaurant-menu'),
+   path('restaurants/<uuid:restaurant_id>/menu', views.restaurant_menu, name='restaurant-menu'),
 
     # Get Restaurants itself by category id
-   # path('categories/<str:category_name>/restaurants',views.restaurants_by_category, name='restaurant-by-category') 
+   path('categories/<str:category_name>/restaurants',views.restaurants_by_category, name='restaurant-by-category'),
+
+   # Get Menu items filtered by restaurant id and menu category
+   path('restaurants/<uuid:restaurant_id>/menu-categories/<str:category_menu_name>/items',views.menu_items_by_category,
+   name='restaurant-menu-items-by-category'), 
 
     # # Restoranlar
     # path('restaurants/', views.restaurant_list_create, name='restaurant-list-create'),

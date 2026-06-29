@@ -62,8 +62,6 @@ def delete_advertisement(request,ad_id):
 
     return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-
 #2. Get and Post General Category
 @extend_schema(
     methods=['GET'],
@@ -93,10 +91,6 @@ def general_category(request):
 
 
 # Delete and Put General Category
-
-
-
-
 
 #3. GET ALL Restaurants Swagger
 @extend_schema(
@@ -147,17 +141,9 @@ def all_restaurants(request):
 # Get Single Restaurant
 @api_view(['GET']) # add delete, put
 def single_restaurant(request, uuid):
-    restaurant = get_object_or_404(Restaurant, id=uuid)
+    restaurant = get_object_or_404(Restaurant.objects.prefetch_related('categories_menu__items'), id=uuid)
     serializer = RestaurantSerializer(restaurant)
     return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
-
 
 #4. Get and Post ALL Menu Categories of Restaurant Swagger
 @extend_schema(
@@ -232,44 +218,70 @@ def menuitems(request):
 
 
 
-# # GET Restaurant menu all items by restaurant_id
-# @extend_schema(
-#     methods = ['GET'],
-#     responses={200: MenuItemSerializer(many=True)},
-#     description="Get all menu items for a restaurant",
-#     tags=["Find menu all items by restaurant_id"]
-# )
+# GET Restaurant menu all items by restaurant_id
+@extend_schema(
+    methods = ['GET'],
+    responses={200: MenuItemSerializer(many=True)},
+    description="Get all menu items for a specific restaurant by filtering through its menu categories.",
+    tags=["Find menu all items by restaurant_id"]
+)
 
-# @api_view(['GET'])
-# def restaurant_menu(request, restaurant_id):
-#     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+@api_view(['GET'])
+def restaurant_menu(request, restaurant_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id)
 
-#     menu_items = MenuItem.objects.filter(
-#         restaurant = restaurant
-#     ).select_related("category")
+    menu_items = MenuItem.objects.filter(
+        restaurant = restaurant
+    ).select_related("category")
 
-#     serializer = MenuItemSerializer(menu_items, many=True)
-#     return Response(serializer.data, status=status.HTTP_200_OK)
+    serializer = MenuItemSerializer(menu_items, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+# Get all menu items for a specific restaurant under a specific menu category section (e.g., Only Burgers from KFC).
+@extend_schema(
+    methods=['GET'],
+    responses={200:MenuItemSerializer(many=True)},
+    description="Get all menu items for a specific restaurant under a specific menu category section (e.g., Only Burgers from KFC).",
+    tags=["Get all menu items of restaurant with specific menu category"]
+)
+@api_view(['GET'])
+def menu_items_by_category(request,restaurant_id,category_menu_name):
+    # 1. Safety Check: Verify the restaurant exists
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+    
+    # 2. Safety Check: Verify the category menu exists using the correct field name ('name')
+    category_menu = get_object_or_404(
+        CategoryMenu, 
+        name__iexact=category_menu_name, 
+        restaurant=restaurant
+    )
+    
+    # 3. Fetch the menu items belonging to this verified category tab
+    # select_related("category") is used here to avoid N+1 query lookup costs
+    menu_items = MenuItem.objects.filter(category=category_menu).select_related("category")
+    
+    # 4. Serialize and return the response array
+    serializer = MenuItemSerializer(menu_items, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# # Get Restaurants itself by category id
-# @extend_schema(
-#     methods=['GET'],
-#     responses={200:RestaurantSerializer(many=True)},
-#     description="Get Restaurants by category_id",
-#     tags=["Filter by Category"],
-# )
-# @api_view(["GET"])
-# def restaurants_by_category(request, category_name):
-#     restaurants = Restaurant.objects.filter(
-#         categories__name__iexact = category_name
-#     ).distinct()
+# Get Restaurants itself by category id
+@extend_schema(
+    methods=['GET'],
+    responses={200:RestaurantSerializer(many=True)},
+    description="Get Restaurants by category_id",
+    tags=["Filter restaurants by General Category"],
+)
+@api_view(["GET"])
+def restaurants_by_category(request, category_name):
+    restaurants = Restaurant.objects.filter(
+        categories__name__iexact = category_name
+    ).distinct()
 
-#     serializer = RestaurantSerializer(
-#         restaurants, many=True
-#     )
-
-#     return Response(serializer.data, status=status.HTTP_200_OK)
+    serializer = RestaurantSerializer(
+        restaurants, many=True
+    )
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
