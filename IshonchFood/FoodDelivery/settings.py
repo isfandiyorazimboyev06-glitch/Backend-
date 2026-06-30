@@ -34,7 +34,9 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # ✅ TO THIS (Bypasses django-environ parsing quirks completely):
 SECRET_KEY = os.environ.get('SECRET_KEY')
-JWT_ACCESS_SECRET_KEY = os.environ.get('JWT_ACCESS_SECRET_KEY').strip()
+
+# ✅ After (Force strip quotes to match FastAPI/Pydantic parsing behavior):
+JWT_ACCESS_SECRET_KEY = str(os.environ.get('JWT_ACCESS_SECRET_KEY', '')).strip("'\" ")
 
 
 
@@ -74,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #'IshonchEat.authentication.JWTSharedSecretAuthentication',
 ]
 
 ROOT_URLCONF = 'FoodDelivery.urls'

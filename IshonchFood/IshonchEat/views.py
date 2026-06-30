@@ -1,6 +1,5 @@
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from .authentication import JWTSharedSecretAuthentication
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
@@ -12,8 +11,7 @@ from drf_spectacular.utils import extend_schema,extend_schema_view,OpenApiParame
 
 from drf_spectacular.types import OpenApiTypes
 
-
-
+from django.db.models import Q
 
 
 
@@ -39,7 +37,7 @@ from drf_spectacular.types import OpenApiTypes
 
 # Get and Post All Popular Products
 @api_view(['GET','POST'])
-#@authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def popular_menu_items(request):
     if request.method == 'GET':
         ads = Advertisement.objects.filter(is_active=True).select_related('restaurant')
@@ -47,8 +45,8 @@ def popular_menu_items(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == 'POST':
         # Guard: Explicit check if user has role.manage or admin access
-        # if not request.user.is_authenticated or not request.user.has_perm('role.manage'):
-        #     return Response({"detail":"Permission denied."}, status.HTTP_403_FORBIDDEN)
+        if not request.user.is_authenticated or not request.user.has_perm('role.manage'):
+            return Response({"detail":"Permission denied."}, status.HTTP_403_FORBIDDEN)
 
         deserializer = AdvertisementSerializer(data=request.data)
         deserializer.is_valid(raise_exception=True)
@@ -87,11 +85,11 @@ def popular_menu_items(request):
 )
 
 @api_view(["PUT","DELETE"]) 
-# @authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def delete_advertisement(request,ad_id):
     # Guard: Only system admins can alter advertising slots
-    # if not request.user.is_authenticated or not request.user.has_perm('role.manage'):
-    #     return Response({'detail':'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+    if not request.user.is_authenticated or not request.user.has_perm('role.manage'):
+        return Response({'detail':'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
 
     ads = get_object_or_404(Advertisement, id=ad_id)
 
@@ -127,15 +125,15 @@ def delete_advertisement(request,ad_id):
 )
 
 @api_view(['GET','POST'])
-# @authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def general_category(request):
     if request.method == 'GET':
         categories = Category.objects.values('id','name','sort_order') # auto parse will recieve dict
         serializer = CategorySerializer(categories,many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == 'POST':
-        # if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
-        #     return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN    )
+        if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
+            return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN)
 
         deserializer = CategorySerializer(data=request.data)
         deserializer.is_valid(raise_exception=True)
@@ -197,7 +195,7 @@ def general_category_detail(request,id):
 
 # GET ALL Restaurants
 @api_view(['GET','POST'])
-# @authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def all_restaurants(request):
     if request.method == 'GET':
         restaurant = Restaurant.objects.prefetch_related('categories').all().only(
@@ -216,8 +214,8 @@ def all_restaurants(request):
     
     elif request.method == 'POST':
         # Only admin infrastructure assigns new root restaurants
-        # if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
-        #     return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
+            return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
         deserializer = RestaurantSerializer(data=request.data)
         deserializer.is_valid(raise_exception=True)
@@ -247,13 +245,13 @@ def all_restaurants(request):
 )
 # Get Single Restaurant
 @api_view(['GET','PUT','DELETE']) 
-# @authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def single_restaurant(request, uuid):
     # 1. HANDLE RETRIEVAL (GET) - Highly optimized with prefetching
     if request.method == 'GET':
         # restaurant.read permission allows check profile records
-        # if not request.user.is_authenticated or not request.user.has_perm('restaurant.read'):
-        #     return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN)
+        if not request.user.is_authenticated or not request.user.has_perm('restaurant.read'):
+            return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN)
 
         restaurant = get_object_or_404(Restaurant.objects.prefetch_related('categories_menu__items'), id=uuid)
         serializer = RestaurantSerializer(restaurant)
@@ -264,15 +262,15 @@ def single_restaurant(request, uuid):
 
 
     # # Ownership guard context validation for mutations
-    # is_owner = str(restaurant.owner_user_id) == str(request.user.id)
-    # is_admin = getattr(request.user, 'role', None) == 'ADMIN'
+    is_owner = str(restaurant.owner_user_id) == str(request.user.id)
+    is_admin = getattr(request.user, 'role', None) == 'ADMIN'
 
 
     # 2. HANDLE UPDATE (PUT)
     if request.method == 'PUT':
 
-        # if not request.user.is_authenticated or not (is_owner or is_admin):
-        #     return Response({"detail":"You do not own this restaurant profile resource."}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.is_authenticated or not (is_owner or is_admin):
+            return Response({"detail":"You do not own this restaurant profile resource."}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = RestaurantSerializer(restaurant,data=request.data,partial=False)
         serializer.is_valid(raise_exception=True)
@@ -281,8 +279,8 @@ def single_restaurant(request, uuid):
 
     # 3. HANDLE DELETION (DELETE)
     elif request.method == 'DELETE':
-        # if not request.user.is_authenticated or not is_admin:   
-        #     return Response({"detail": "Only system administrators can drop full restaurants."},status=status.HTTP_403_FORBIDDEN)
+        if not request.user.is_authenticated or not is_admin:   
+            return Response({"detail": "Only system administrators can drop full restaurants."},status=status.HTTP_403_FORBIDDEN)
         restaurant.delete()
         return Response({"detail":"Restaurant successfully deleted."},status=status.HTTP_204_NO_CONTENT)
     
@@ -310,7 +308,7 @@ def single_restaurant(request, uuid):
 
 # Get and Post ALL Menu Categories of Restaurant
 @api_view(['GET','POST'])
-#@authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def all_categories_menu(request):
     if request.method == 'GET':
         categories = CategoryMenu.objects.all().select_related('restaurant')
@@ -318,23 +316,13 @@ def all_categories_menu(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':
-    #    # ⚠️ TEMPORARY DEBUG PRINTS
-    #     print(f"Is Authenticated: {request.user.is_authenticated}")
-    #     if request.user.is_authenticated:
-    #         print(f"User Role: {request.user.role}")
-    #         print(f"User Permissions: {request.user.permissions}")
-    #     else:
-    #         print("User is Anonymous! Token decoding failed completely.")
-    #     if not request.user.is_authenticated or not request.user.has_perm('menu.manage'):
-    #         return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-
         # # Ownership validation check for RESTAURANT role
-        # if request.user.role == "RESTAURANT_OWNER":
-        #     target_restaurant_id = request.data.get('restaurant')
-        #     # ⚠️ Check if 'owner_user_id' is the correct field name on your Restaurant model!
-        #     restaurant_profile = get_object_or_404(Restaurant, id=target_restaurant_id)
-        #     if str(restaurant_profile.owner_user_id) != str(request.user.id):
-        #         return Response({"detail":"You do not own this target restaurant location."},status=status.HTTP_403_FORBIDDEN)
+        if request.user.role == "RESTAURANT_OWNER":
+            target_restaurant_id = request.data.get('restaurant')
+            #  Check if 'owner_user_id' is the correct field name on your Restaurant model!
+            restaurant_profile = get_object_or_404(Restaurant, id=target_restaurant_id)
+            if str(restaurant_profile.owner_user_id) != str(request.user.id):
+                return Response({"detail":"You do not own this target restaurant location."},status=status.HTTP_403_FORBIDDEN)
 
         deserializer = CategoryMenuSerializer(data=request.data)
         deserializer.is_valid(raise_exception=True)
@@ -355,19 +343,19 @@ def all_categories_menu(request):
 )
 # DELETE and PUT Single Menu Categories of Restaurant
 @api_view(['PUT','DELETE'])
-#@authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def category_menu_detail(request,id):
-    # if not request.user.is_authenticated or not request.user.has_perm('menu.manage'):
-    #     return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+    if not request.user.is_authenticated or not request.user.has_perm('menu.manage'):
+        return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
     category_menu = get_object_or_404(CategoryMenu, id=id)  
 
     # Check ownership
-    # is_owner=str(category_menu.restaurant.owner_user_id) == str(request.user.id)
-    # is_admin = request.user.role == "ADMIN"
+    is_owner=str(category_menu.restaurant.owner_user_id) == str(request.user.id)
+    is_admin = request.user.role == "ADMIN"
 
-    # if not (is_owner or is_admin):
-    #     return Response({"detail":"You do not have access to alter this restaurant layout."},status=status.HTTP_403_FORBIDDEN)
+    if not (is_owner or is_admin):
+         return Response({"detail":"You do not have access to alter this restaurant layout."},status=status.HTTP_403_FORBIDDEN)
 
     if request.method == 'PUT':
         serializer = CategoryMenuSerializer(category_menu,data=request.data,partial=False)
@@ -404,7 +392,7 @@ def category_menu_detail(request,id):
 )
 # Get and Post ALL MenuItems
 @api_view(['GET','POST'])
-#@authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def menuitems(request):
     if request.method == 'GET':
         menu_items = MenuItem.objects.select_related('category')
@@ -412,14 +400,14 @@ def menuitems(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     elif request.method == 'POST':
-        # if not request.user.is_authenticated or not request.user.has_perm('menu_manage'):
-        #     return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.is_authenticated or not request.user.has_perm('menu_manage'):
+            return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
-        # if request.user.role == "RESTAURANT":
-        #     category_id = request.data.get('category')
-        #     category_menu = get_object_or_404(CategoryMenu,id=category_id)
-        #     if str(category_menu.restaurant.owner_user_id) != str(request.user.id):
-        #         return Response({"detail":"You do not own this category's restaurant menu."},status=status.HTTP_403_FORBIDDEN)
+        if request.user.role == "RESTAURANT":
+            category_id = request.data.get('category')
+            category_menu = get_object_or_404(CategoryMenu,id=category_id)
+            if str(category_menu.restaurant.owner_user_id) != str(request.user.id):
+                return Response({"detail":"You do not own this category's restaurant menu."},status=status.HTTP_403_FORBIDDEN)
 
         deserializer = MenuItemSerializer(data=request.data)
         deserializer.is_valid(raise_exception=True)
@@ -445,21 +433,20 @@ def menuitems(request):
     )
 )
 @api_view(['GET','PUT','DELETE'])
-#@authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def menuitem_detail(request,id):
 
-    
 
-    # if not request.user.is_authenticated or not request.user.has_perm('menu.manage'):
-    #     return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+    if not request.user.is_authenticated or not request.user.has_perm('menu.manage'):
+        return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
     menuitem = get_object_or_404(MenuItem.objects.prefetch_related('category__restaurant'), id=id)
 
-    # is_owner = str(menuitem.category.restaurant.owner_user_id) == str(request.user.id)
-    # is_admin = request.user.role == 'ADMIN'
+    is_owner = str(menuitem.category.restaurant.owner_user_id) == str(request.user.id)
+    is_admin = request.user.role == 'ADMIN'
 
-    # if not (is_owner or is_admin):
-    #     return Response({"detail":"You do not own the restaurant providing this food item."},status=status.HTTP_403_FORBIDDEN)
+    if not (is_owner or is_admin):
+        return Response({"detail":"You do not own the restaurant providing this food item."},status=status.HTTP_403_FORBIDDEN)
 
     if request.method == 'GET':
         serializer = MenuItemSerializer(menuitem)
@@ -490,6 +477,7 @@ def menuitem_detail(request,id):
 )
 
 @api_view(['GET'])
+@authentication_classes([JWTSharedSecretAuthentication])
 def restaurant_menu(request, restaurant_id):
     # 1. Verify that the restaurant exists
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
@@ -524,6 +512,7 @@ def restaurant_menu(request, restaurant_id):
     tags=["Filter restaurants by General Category"],
 )
 @api_view(["GET"])
+@authentication_classes([JWTSharedSecretAuthentication])
 def restaurants_by_category(request,category_name):
     # category_name=request.query_params.get('category_name',None)
 
@@ -549,6 +538,7 @@ def restaurants_by_category(request,category_name):
     tags=["Get all menu items of restaurant with specific menu category"]
 )
 @api_view(['GET'])
+@authentication_classes([JWTSharedSecretAuthentication])
 def menu_items_by_category(request,restaurant_id,category_menu_name):
     # 1. Safety Check: Verify the restaurant exists
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
@@ -576,6 +566,7 @@ def menu_items_by_category(request,restaurant_id,category_menu_name):
     tags=['Resturant Category Menu -> Menu Items']
 )
 @api_view()
+@authentication_classes([JWTSharedSecretAuthentication])
 def restaurant_menu_detail(request,restaurant_id):
     categories = (
         CategoryMenu.objects.filter(restaurant_id=restaurant_id)
@@ -591,7 +582,7 @@ def restaurant_menu_detail(request,restaurant_id):
 # ==========================================
 # PUBLIC GLOBAL SEARCH ENDPOINT
 # ==========================================
-from django.db.models import Q
+
 @extend_schema(
     methods=['GET'],
     parameters=[
@@ -610,6 +601,7 @@ from django.db.models import Q
     tags=['Search']
 )
 @api_view(['GET'])
+@authentication_classes([JWTSharedSecretAuthentication])
 def global_search(request):
     query = request.query_params.get('q', '').strip()
     
