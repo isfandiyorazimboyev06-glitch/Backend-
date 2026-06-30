@@ -127,15 +127,15 @@ def delete_advertisement(request,ad_id):
 )
 
 @api_view(['GET','POST'])
-# @authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def general_category(request):
     if request.method == 'GET':
         categories = Category.objects.values('id','name','sort_order') # auto parse will recieve dict
         serializer = CategorySerializer(categories,many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == 'POST':
-        # if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
-        #     return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN    )
+        if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
+            return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN    )
 
         deserializer = CategorySerializer(data=request.data)
         deserializer.is_valid(raise_exception=True)
@@ -573,3 +573,54 @@ def restaurant_menu_detail(request,restaurant_id):
     serializer = CategoryMenuOfMenuCategorySerializer(categories, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+# 10 Searching bar for frontend
+# ==========================================
+# PUBLIC GLOBAL SEARCH ENDPOINT
+# ==========================================
+from django.db.models import Q
+@extend_schema(
+    methods=['GET'],
+    parameters=[
+        OpenApiParameter(
+            name='q',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            required=True,
+            description="Search keyword for restaurant names or menu items (e.g., 'lavash')"
+        )
+    ],
+    responses={
+        200: OpenApiTypes.OBJECT
+    },
+    description="Global search across restaurants and menu items.",
+    tags=['Search']
+)
+@api_view(['GET'])
+def global_search(request):
+    query = request.query_params.get('q', '').strip()
+    
+    if not query:
+        return Response({
+            "restaurants": [],
+            "items": []
+        }, status=status.HTTP_200_OK)
+
+    # We use Q directly here, completely removing "models.Q"
+    restaurants = Restaurant.objects.filter(
+        Q(name__icontains=query) | Q(description__icontains=query)
+    ).distinct().prefetch_related('categories')
+
+    items = MenuItem.objects.filter(
+        Q(name__icontains=query) | Q(description__icontains=query)
+    ).distinct().prefetch_related('category')
+
+    restaurant_serializer = RestaurantSerializer(restaurants, many=True)
+    item_serializer = MenuItemSerializer(items, many=True)
+
+    return Response({
+        "restaurants": restaurant_serializer.data,
+        "items": item_serializer.data
+    }, status=status.HTTP_200_OK)

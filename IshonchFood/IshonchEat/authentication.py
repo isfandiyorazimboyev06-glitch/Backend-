@@ -48,7 +48,7 @@ class JWTSharedSecretAuthentication(authentication.BaseAuthentication):
             print(f"➔ RAW KEY IN SETTINGS: {settings.JWT_ACCESS_SECRET_KEY}")
             print(f"➔ KEY LENGTH: {len(settings.JWT_ACCESS_SECRET_KEY)}")
 
-            secret_bytes = settings.JWT_ACCESS_SECRET_KEY.encode('utf-8')
+            secret_bytes = settings.JWT_ACCESS_SECRET_KEY
             print(f"➔ ENCODED BYTES: {secret_bytes}")
 
             payload = jwt.decode(token,secret_bytes, algorithms=['HS256'],issuer='foodexpress-auth')

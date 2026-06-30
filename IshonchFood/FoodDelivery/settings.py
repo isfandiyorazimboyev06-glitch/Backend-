@@ -34,7 +34,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # ✅ TO THIS (Bypasses django-environ parsing quirks completely):
 SECRET_KEY = os.environ.get('SECRET_KEY')
-JWT_ACCESS_SECRET_KEY = os.environ.get('JWT_ACCESS_SECRET_KEY').strip('"')
+JWT_ACCESS_SECRET_KEY = os.environ.get('JWT_ACCESS_SECRET_KEY').strip()
 
 
 

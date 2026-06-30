@@ -37,6 +37,9 @@ urlpatterns = [
     #9
     path("restaurants/<uuid:restaurant_id>/menu-items",views.restaurant_menu_detail),
 
+    #10
+    path('search', views.global_search, name='global-search'),
+
 
 
 
