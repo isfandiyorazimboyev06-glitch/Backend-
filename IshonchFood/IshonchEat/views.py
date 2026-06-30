@@ -395,7 +395,7 @@ def category_menu_detail(request,id):
 @authentication_classes([JWTSharedSecretAuthentication])
 def menuitems(request):
     if request.method == 'GET':
-        menu_items = MenuItem.objects.select_related('category')
+        menu_items = MenuItem.objects.prefetch_related('category')
         serializer = MenuItemSerializer(menu_items,many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -403,7 +403,7 @@ def menuitems(request):
         if not request.user.is_authenticated or not request.user.has_perm('menu_manage'):
             return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
-        if request.user.role == "RESTAURANT":
+        if request.user.role == "RESTAURANT_OWNER":
             category_id = request.data.get('category')
             category_menu = get_object_or_404(CategoryMenu,id=category_id)
             if str(category_menu.restaurant.owner_user_id) != str(request.user.id):
@@ -587,7 +587,7 @@ def restaurant_menu_detail(request,restaurant_id):
     methods=['GET'],
     parameters=[
         OpenApiParameter(
-            name='q',
+            name='query',
             type=OpenApiTypes.STR,
             location=OpenApiParameter.QUERY,
             required=True,
@@ -603,7 +603,7 @@ def restaurant_menu_detail(request,restaurant_id):
 @api_view(['GET'])
 @authentication_classes([JWTSharedSecretAuthentication])
 def global_search(request):
-    query = request.query_params.get('q', '').strip()
+    query = request.query_params.get('query', '').strip()
     
     if not query:
         return Response({

@@ -36,10 +36,12 @@ class JWTSharedSecretAuthentication(authentication.BaseAuthentication):
 
         try:
 
-            # MATCH FASTAPI EXACTLY: Use the raw key string directly
+            
             secret_key = str(settings.JWT_ACCESS_SECRET_KEY)
 
-            #  MATCH FASTAPI CLAIMS EXACTLY: Pass the explicit issuer check
+            print(f"\nJWT ACCESS TOKEN: {settings.JWT_ACCESS_SECRET_KEY}\n")
+
+            #  MATCH DRF CLAIMS EXACTLY: Pass the explicit issuer check
             payload = jwt.decode(
                 token, 
                 secret_key, 
