@@ -89,7 +89,7 @@ class MenuItem(models.Model):
     # Manually defining the default Django behavior
     id = models.BigAutoField(primary_key=True) 
     #restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='menu_items')
-    category = models.ForeignKey(CategoryMenu, on_delete=models.CASCADE, related_name='items')
+    category = models.ManyToManyField(CategoryMenu, related_name='items')
     name = models.CharField(max_length=255)
     description = models.TextField(blank = True, null = True)
 

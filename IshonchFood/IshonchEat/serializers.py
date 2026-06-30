@@ -14,6 +14,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id','name']
         
 class RestaurantSerializer(serializers.ModelSerializer):
+    categories = CategorySerializer(many=True,read_only=True)
     class Meta:
         model = Restaurant
         fields = ['id','owner_user_id','name','description','address','is_open','created_at','restaurant_img','categories']
@@ -29,6 +30,7 @@ class CategoryMenuSerializer(serializers.ModelSerializer):
 
 
 class MenuItemSerializer(serializers.ModelSerializer):
+    category = CategoryMenuSerializer(many=True, read_only=True)
     class Meta:
         model = MenuItem
         fields = [
@@ -38,5 +40,12 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'discount_status', 'promotion',
             'img_product', 'delivery_time'
         ]
+
+
+class CategoryMenuOfMenuCategorySerializer(serializers.ModelSerializer):
+    items=MenuItemSerializer(many=True,read_only=True)
+    class Meta:
+        model = CategoryMenu
+        fields = ['id','restaurant','name','items']
 
 

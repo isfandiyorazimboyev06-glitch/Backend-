@@ -28,11 +28,14 @@ urlpatterns = [
     path('restaurants/<uuid:restaurant_id>/menu', views.restaurant_menu, name='restaurant-menu'),
 
     #7. Get Restaurants itself by category id
-    path('categories/<str:category_name>/restaurants',views.restaurants_by_category, name='restaurant-by-category'),
+    path('category/restaurants/<str:category_name>',views.restaurants_by_category, name='restaurant-by-category'),
 
     #8. Get Menu items filtered by restaurant id and menu category
     path('restaurants/<uuid:restaurant_id>/menu_categories/<str:category_menu_name>/items',views.menu_items_by_category,
     name='restaurant-menu-items-by-category'), 
+
+    #9
+    path("restaurants/<uuid:restaurant_id>/menu-items",views.restaurant_menu_detail),
 
 
 

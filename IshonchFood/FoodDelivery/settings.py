@@ -23,7 +23,8 @@ env = environ.Env(
     DEBUG=(bool, False)
 )
 
-
+# Read the file definitions safely
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Take environment variables from .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -31,8 +32,11 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+# ✅ TO THIS (Bypasses django-environ parsing quirks completely):
+SECRET_KEY = os.environ.get('SECRET_KEY')
+JWT_ACCESS_SECRET_KEY = os.environ.get('JWT_ACCESS_SECRET_KEY').strip('"')
+
+
 
 
 
@@ -164,62 +168,49 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Ishonch Food Delivery API Swagger',
     'DESCRIPTION': 'Comprehensive API documentation for the IshonchFood backend system.',
     'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False, # Setting this to False hides the schema endpoint itself
+    'SERVE_INCLUDE_SCHEMA': False, 
 
-    #  Loads a theme that supports native light/dark switching hooks
+    # Loads a theme that supports native light/dark switching hooks
     'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5',
 
-    # Make sure you aren't overriding component settings to be hidden
     'SWAGGER_UI_SETTINGS': {
-        'deepLinking': True, # Keeps individual endpoints bookmarkable in the browser URL bar
-        'displayOperationId': False, # Hides the internal technical Python function names from the UI
-        'defaultModelsExpandDepth': 1, # Keeps data models neatly collapsed by default at the bottom of the page
-        'defaultModelRendering': 'model',  # Shows the data model structure
-        'displayRequestDuration': True, # Shows a timer tracking exactly how long an API request takes to return
-
-       #'alpha' sorts your endpoints alphabetically within their tags
-       #'method' sorts them by HTTP action (GET, POST, PUT, DELETE)
+        'deepLinking': True, 
+        'displayOperationId': False, 
+        'defaultModelsExpandDepth': 1, 
+        'defaultModelRendering': 'model',  
+        'displayRequestDuration': True, 
         'operationsSorter': 'alpha', 
-       #'alpha' sorts the main sections (Tags) alphabetically
         'tagsSorter': 'alpha',
-
-        'docExpansion': 'list',        # Endpoints load open and visible
-       #'persistAuthorization': True,  # Remembers JWT tokens on refresh
-       #'filter': True, # Quick search filter bar
+        'docExpansion': 'list',        
     },
 
-    # Use the default theme stylesheet so the dark mode utility scripts can read properties correctly
+    # Use the default theme stylesheet
     'SWAGGER_UI_THEME': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css',
     
-    # This automatically drops a script onto the page to let them switch manually!
+    # Dark mode utility scripts
     'SWAGGER_UI_THEME_EXTRA': [
         'https://cdn.jsdelivr.net/npm/swagger-ui-dark-mode-toggle@1.0.1/dist/swagger-ui-dark-mode-toggle.css',
     ],
     'SWAGGER_UI_JS': [
         'https://cdn.jsdelivr.net/npm/swagger-ui-dark-mode-toggle@1.0.1/dist/swagger-ui-dark-mode-toggle.js',
     ],
+
+    # 🌟 FIXED INDENTATION: These are now properly placed INSIDE the dictionary
+    'SECURITY': [{'BearerAuth': []}],
     
-
-#     'TAGS': [
-#     {
-#         'name': 'Category',
-#         'description': 'Category management endpoints. These APIs allow you to create, retrieve, and manage product categories within the system.',
-#     },
-#     {
-#         'name': 'Restaurants',
-#         'description': 'Operations involving restaurant registration, profile handling, and status updates.',
-#     },
-#     {
-#         'name': 'Menu Items',
-#         'description': 'Endpoints dedicated to managing catalog items, pricing structures, and discounts.',
-#     },
-# ],
-
-    # This enables the Authorize button in Swagger for Bearer JWT Tokens
-    'SECURITY': [{
-        'BearerAuth': [],
-    }],
-    'COMPONENT_SPLIT_REQUEST': True,# Splits your data schemas into two separate variants: one for creating (POST/PUT) and one for reading (GET)
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'BearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+                'description': 'Paste your raw Node.js access token below (Do NOT type "Bearer").'
+            }
+        }
+    },
+    'COMPONENT_SPLIT_REQUEST': True,
+    'AUTHENTICATION_WHITELIST': [],
+    'CUSTOM_AUTHENTICATION_CLASSES':[],
 }
 
 

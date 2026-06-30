@@ -1,31 +1,24 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission
 
-class HasMenuManagePermission(permissions.BasePermission):
+class HasRequiredPermission(BasePermission):
     """
-    Token ichida permissions ro'yxatida 'menu.manage' borligini tekshiradi.
+    A dynamic permission guard. Checks if the incoming JWT contains the required action.
     """
+    def __init__(self, required_permission):
+        self.required_permission = required_permission
+
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        
-        # SimpleJWT tokendan kelgan payloadni request.auth orqali o'qiymiz
-        token_permissions = request.auth.get('permissions', [])
-        return 'menu.manage' in token_permissions
 
+        if getattr(request.user, 'role', None) == "ADMIM":
+            return True
 
+        return request.user.has_perm(self.required_permission)
 
-class IsRestaurantOwner(permissions.BasePermission):
-    """
-    Restoran egasi aynan shu token egasi ekanligini tekshiradi.
-    """
-    def has_object_permission(self, request, view, obj):
-        # Agar so'rov ob'ekt darajasida bo'lsa (PUT, PATCH, DELETE)
-        # Token ichidagi 'user_id' ob'ektdagi 'owner_user_id' ga teng bo'lishi shart
-        token_user_id = str(request.auth.get('user_id'))
-        
-        if hasattr(obj, 'owner_user_id'):
-            return obj.owner_user_id == token_user_id
-        elif hasattr(obj, 'restaurant'):
-            return obj.restaurant.owner_user_id == token_user_id
-            
-        return False
+# Helper function to generate permissions cleanly inside decorators
+def require_permission(permission_name):
+    class FormattedPermission(HasRequiredPermission):
+        def __init__(self):
+            super().__init__(permission_name)
+    return FormattedPermission
