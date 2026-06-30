@@ -156,10 +156,10 @@ def general_category(request):
     tags=['General Category']
 )
 @api_view(['PUT','DELETE'])
-# @authentication_classes([JWTSharedSecretAuthentication])
+@authentication_classes([JWTSharedSecretAuthentication])
 def general_category_detail(request,id):
-    # if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
-    #     return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+    if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
+        return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
     # Fetch the category or raise a 404 error if it doesn't exist
     category = get_object_or_404(Category, id=id)
 
@@ -427,6 +427,11 @@ def menuitems(request):
         return Response(deserializer.data, status=status.HTTP_201_CREATED)
 
 @extend_schema_view(
+    get=extend_schema(
+        description='Get menuitem by its id',
+        responses=MenuItemSerializer(),
+        tags=['Menu Items']
+    ),
     put=extend_schema(
         description='Update menu item by its id',
         request=MenuItemSerializer,
@@ -439,13 +444,16 @@ def menuitems(request):
         tags=['Menu Items']
     )
 )
-@api_view(['PUT','DELETE'])
+@api_view(['GET','PUT','DELETE'])
 #@authentication_classes([JWTSharedSecretAuthentication])
 def menuitem_detail(request,id):
+
+    
+
     # if not request.user.is_authenticated or not request.user.has_perm('menu.manage'):
     #     return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
-    menuitem = get_object_or_404(MenuItem.objects.select_related('category__restaurant'),id=id)
+    menuitem = get_object_or_404(MenuItem.objects.prefetch_related('category__restaurant'), id=id)
 
     # is_owner = str(menuitem.category.restaurant.owner_user_id) == str(request.user.id)
     # is_admin = request.user.role == 'ADMIN'
@@ -453,6 +461,9 @@ def menuitem_detail(request,id):
     # if not (is_owner or is_admin):
     #     return Response({"detail":"You do not own the restaurant providing this food item."},status=status.HTTP_403_FORBIDDEN)
 
+    if request.method == 'GET':
+        serializer = MenuItemSerializer(menuitem)
+        return Response(serializer.data,status=status.HTTP_200_OK)
     if request.method == 'PUT':
         serializer = MenuItemSerializer(menuitem,data=request.data,partial=False)
         serializer.is_valid(raise_exception=True)
