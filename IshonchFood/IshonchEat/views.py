@@ -127,15 +127,15 @@ def delete_advertisement(request,ad_id):
 )
 
 @api_view(['GET','POST'])
-@authentication_classes([JWTSharedSecretAuthentication])
+# @authentication_classes([JWTSharedSecretAuthentication])
 def general_category(request):
     if request.method == 'GET':
         categories = Category.objects.values('id','name','sort_order') # auto parse will recieve dict
         serializer = CategorySerializer(categories,many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == 'POST':
-        if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
-            return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN    )
+        # if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
+        #     return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN    )
 
         deserializer = CategorySerializer(data=request.data)
         deserializer.is_valid(raise_exception=True)
