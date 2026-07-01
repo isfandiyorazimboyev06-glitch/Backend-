@@ -28,7 +28,7 @@ class JWTSharedSecretAuthentication(authentication.BaseAuthentication):
                 print(f"=== JWT DEBUG END ===")
                 return None
         except Exception as e:
-            print(f"❌ Dropped out during splitting: {e}")
+            print(f" Dropped out during splitting: {e}")
             print(f"=== JWT DEBUG END ===")
             raise AuthenticationFailed('Invalid Authorization header format. Use "Bearer <token>"')
 
@@ -36,7 +36,6 @@ class JWTSharedSecretAuthentication(authentication.BaseAuthentication):
 
         try:
 
-            
             secret_key = str(settings.JWT_ACCESS_SECRET_KEY)
 
             print(f"\nJWT ACCESS TOKEN: {settings.JWT_ACCESS_SECRET_KEY}\n")

@@ -8,6 +8,7 @@ from .models import Advertisement, Category, Restaurant, CategoryMenu, MenuItem
 from .serializers import AdvertisementSerializer, CategorySerializer,  RestaurantSerializer,CategoryMenuSerializer, MenuItemSerializer,CategoryMenuOfMenuCategorySerializer
 
 from drf_spectacular.utils import extend_schema,extend_schema_view,OpenApiParameter
+#from rest_framework.views import APIView
 
 from drf_spectacular.types import OpenApiTypes
 
@@ -43,6 +44,7 @@ def popular_menu_items(request):
         ads = Advertisement.objects.filter(is_active=True).select_related('restaurant')
         serializer = AdvertisementSerializer(ads,many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
     elif request.method == 'POST':
         # Guard: Explicit check if user has role.manage or admin access
         if not request.user.is_authenticated or not request.user.has_perm('role.manage'):
@@ -52,6 +54,9 @@ def popular_menu_items(request):
         deserializer.is_valid(raise_exception=True)
         deserializer.save()
         return Response(deserializer.data, status=status.HTTP_201_CREATED)
+
+#class PopularMenuItemsView(APIView):
+
 
 
 @extend_schema_view(
@@ -131,6 +136,7 @@ def general_category(request):
         categories = Category.objects.values('id','name','sort_order') # auto parse will recieve dict
         serializer = CategorySerializer(categories,many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
     elif request.method == 'POST':
         if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
             return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN)
@@ -156,6 +162,7 @@ def general_category(request):
 @api_view(['PUT','DELETE'])
 @authentication_classes([JWTSharedSecretAuthentication])
 def general_category_detail(request,id):
+
     if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
         return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
     # Fetch the category or raise a 404 error if it doesn't exist
@@ -250,8 +257,8 @@ def single_restaurant(request, uuid):
     # 1. HANDLE RETRIEVAL (GET) - Highly optimized with prefetching
     if request.method == 'GET':
         # restaurant.read permission allows check profile records
-        if not request.user.is_authenticated or not request.user.has_perm('restaurant.read'):
-            return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN)
+        # if not request.user.is_authenticated or not request.user.has_perm('restaurant.read'):
+        #     return Response({"detail":"Permission denied."},status=status.HTTP_403_FORBIDDEN)
 
         restaurant = get_object_or_404(Restaurant.objects.prefetch_related('categories_menu__items'), id=uuid)
         serializer = RestaurantSerializer(restaurant)
@@ -436,11 +443,14 @@ def menuitems(request):
 @authentication_classes([JWTSharedSecretAuthentication])
 def menuitem_detail(request,id):
 
+    menuitem = get_object_or_404(MenuItem.objects.prefetch_related('category__restaurant'), id=id)
+
+    if request.method == 'GET':
+        serializer = MenuItemSerializer(menuitem)
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
     if not request.user.is_authenticated or not request.user.has_perm('menu.manage'):
         return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-
-    menuitem = get_object_or_404(MenuItem.objects.prefetch_related('category__restaurant'), id=id)
 
     is_owner = str(menuitem.category.restaurant.owner_user_id) == str(request.user.id)
     is_admin = request.user.role == 'ADMIN'
@@ -448,9 +458,7 @@ def menuitem_detail(request,id):
     if not (is_owner or is_admin):
         return Response({"detail":"You do not own the restaurant providing this food item."},status=status.HTTP_403_FORBIDDEN)
 
-    if request.method == 'GET':
-        serializer = MenuItemSerializer(menuitem)
-        return Response(serializer.data,status=status.HTTP_200_OK)
+    
     if request.method == 'PUT':
         serializer = MenuItemSerializer(menuitem,data=request.data,partial=False)
         serializer.is_valid(raise_exception=True)
