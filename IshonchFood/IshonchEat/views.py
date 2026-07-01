@@ -60,7 +60,7 @@ def popular_menu_items(request):
 
 
 @extend_schema_view(
-    put=extend_schema(
+    patch=extend_schema(
         description="Update an advertisement completely (Admin Only)",
         parameters=[
             OpenApiParameter(
@@ -89,7 +89,7 @@ def popular_menu_items(request):
     )
 )
 
-@api_view(["PUT","DELETE"]) 
+@api_view(["PATCH","DELETE"]) 
 @authentication_classes([JWTSharedSecretAuthentication])
 def delete_advertisement(request,ad_id):
     # Guard: Only system admins can alter advertising slots
@@ -98,8 +98,8 @@ def delete_advertisement(request,ad_id):
 
     ads = get_object_or_404(Advertisement, id=ad_id)
 
-    if request.method == "PUT":
-        serializer = AdvertisementSerializer(ads,data=request.data, partial=False)
+    if request.method == "PATCH":
+        serializer = AdvertisementSerializer(ads,data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -147,7 +147,7 @@ def general_category(request):
         return Response(deserializer.data, status=status.HTTP_201_CREATED)
 
 @extend_schema(
-    methods=['PUT'],
+    methods=['PATCH'],
     request=CategorySerializer,
     responses={200:CategorySerializer},
     description="Update A General Category (Admin Only)",
@@ -159,7 +159,7 @@ def general_category(request):
     description="DELETE A General Category (Admin Only)",
     tags=['General Category']
 )
-@api_view(['PUT','DELETE'])
+@api_view(['PATCH','DELETE'])
 @authentication_classes([JWTSharedSecretAuthentication])
 def general_category_detail(request,id):
 
@@ -168,9 +168,9 @@ def general_category_detail(request,id):
     # Fetch the category or raise a 404 error if it doesn't exist
     category = get_object_or_404(Category, id=id)
 
-    # 1 HANDLE UPDATE (PUT)
-    if request.method == 'PUT':
-        serializer = CategorySerializer(category,data=request.data, partial=False)
+    # 1 HANDLE UPDATE (PATCH)
+    if request.method == 'PATCH':
+        serializer = CategorySerializer(category,data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -237,7 +237,7 @@ def all_restaurants(request):
             responses={200: RestaurantSerializer},
             tags=['Restaurants']
     ),
-    put=extend_schema(
+    patch=extend_schema(
         description="Modify an existing restaurant profile (Owner or Admin)",
         request=RestaurantSerializer,
         responses={200:RestaurantSerializer},
@@ -251,7 +251,7 @@ def all_restaurants(request):
 
 )
 # Get Single Restaurant
-@api_view(['GET','PUT','DELETE']) 
+@api_view(['GET','PATCH','DELETE']) 
 @authentication_classes([JWTSharedSecretAuthentication])
 def single_restaurant(request, uuid):
     # 1. HANDLE RETRIEVAL (GET) - Highly optimized with prefetching
@@ -264,7 +264,7 @@ def single_restaurant(request, uuid):
         serializer = RestaurantSerializer(restaurant)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # Fetch the flat record for mutations (PUT/DELETE)
+    # Fetch the flat record for mutations (PATCH/DELETE)
     restaurant = get_object_or_404(Restaurant,id=uuid)
 
 
@@ -273,13 +273,13 @@ def single_restaurant(request, uuid):
     is_admin = getattr(request.user, 'role', None) == 'ADMIN'
 
 
-    # 2. HANDLE UPDATE (PUT)
-    if request.method == 'PUT':
+    # 2. HANDLE UPDATE (PATCH)
+    if request.method == 'PATCH':
 
         if not request.user.is_authenticated or not (is_owner or is_admin):
             return Response({"detail":"You do not own this restaurant profile resource."}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = RestaurantSerializer(restaurant,data=request.data,partial=False)
+        serializer = RestaurantSerializer(restaurant,data=request.data,partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -338,7 +338,12 @@ def all_categories_menu(request):
 
 
 @extend_schema_view(
-    put=extend_schema(
+    get=extend_schema(
+        description='get menu category by its id',
+        responses={200:CategoryMenuSerializer},
+        tags=['Category Menu of Restaurant']
+    ),
+    patch=extend_schema(
         request=CategoryMenuSerializer,
         responses={200:CategoryMenuSerializer},
         tags=['Category Menu of Restaurant']
@@ -348,14 +353,19 @@ def all_categories_menu(request):
         tags=['Category Menu of Restaurant']
     )
 )
-# DELETE and PUT Single Menu Categories of Restaurant
-@api_view(['PUT','DELETE'])
+# DELETE and PATCH Single Menu Categories of Restaurant
+@api_view(['GET','PATCH','DELETE'])
 @authentication_classes([JWTSharedSecretAuthentication])
 def category_menu_detail(request,id):
+
+    category_menu = get_object_or_404(CategoryMenu, id=id) 
+    if request.method == 'GET':
+        serializer = CategoryMenuSerializer(category_menu)
+        return Response(serializer.data,status=status.HTTP_200_OK)
     if not request.user.is_authenticated or not request.user.has_perm('menu.manage'):
         return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
-    category_menu = get_object_or_404(CategoryMenu, id=id)  
+     
 
     # Check ownership
     is_owner=str(category_menu.restaurant.owner_user_id) == str(request.user.id)
@@ -364,8 +374,8 @@ def category_menu_detail(request,id):
     if not (is_owner or is_admin):
          return Response({"detail":"You do not have access to alter this restaurant layout."},status=status.HTTP_403_FORBIDDEN)
 
-    if request.method == 'PUT':
-        serializer = CategoryMenuSerializer(category_menu,data=request.data,partial=False)
+    if request.method == 'PATCH':
+        serializer = CategoryMenuSerializer(category_menu,data=request.data,partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -427,7 +437,7 @@ def menuitems(request):
         responses=MenuItemSerializer(),
         tags=['Menu Items']
     ),
-    put=extend_schema(
+    patch=extend_schema(
         description='Update menu item by its id',
         request=MenuItemSerializer,
         responses=MenuItemSerializer(),
@@ -439,7 +449,7 @@ def menuitems(request):
         tags=['Menu Items']
     )
 )
-@api_view(['GET','PUT','DELETE'])
+@api_view(['GET','PATCH','DELETE'])
 @authentication_classes([JWTSharedSecretAuthentication])
 def menuitem_detail(request,id):
 
@@ -459,8 +469,8 @@ def menuitem_detail(request,id):
         return Response({"detail":"You do not own the restaurant providing this food item."},status=status.HTTP_403_FORBIDDEN)
 
     
-    if request.method == 'PUT':
-        serializer = MenuItemSerializer(menuitem,data=request.data,partial=False)
+    if request.method == 'PATCH':
+        serializer = MenuItemSerializer(menuitem,data=request.data,partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data,status=status.HTTP_200_OK)

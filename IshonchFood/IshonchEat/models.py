@@ -48,6 +48,9 @@ class Restaurant(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering=['owner_user_id']
+
 # Advertisement Banner
 class Advertisement(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -105,6 +108,7 @@ class MenuItem(models.Model):
 
     def __str__(self):
         return f"{self.name} (ID: {self.id})"
+
 
 
 
