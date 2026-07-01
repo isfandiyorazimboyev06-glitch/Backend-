@@ -49,3 +49,4 @@ class CategoryMenuOfMenuCategorySerializer(serializers.ModelSerializer):
         fields = ['id','restaurant','name','items']
 
 
+

@@ -77,7 +77,6 @@ class CategoryMenu(models.Model):
 
     class Meta: 
         ordering = ['sort_order']
-
         # Prevents duplicate local categories in the same restaurant
         unique_together = ('restaurant', 'name')
 

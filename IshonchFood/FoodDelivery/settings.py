@@ -32,10 +32,10 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# ✅ TO THIS (Bypasses django-environ parsing quirks completely):
+#  TO THIS (Bypasses django-environ parsing quirks completely):
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-# ✅ After (Force strip quotes to match FastAPI/Pydantic parsing behavior):
+#  After (Force strip quotes to match FastAPI/Pydantic parsing behavior):
 JWT_ACCESS_SECRET_KEY = str(os.environ.get('JWT_ACCESS_SECRET_KEY', '')).strip("'\" ")
 
 
@@ -250,32 +250,26 @@ else:
     AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
     AWS_S3_REGION_NAME = env('REGION_NAME')  # Change to your bucket's region
-
-
     # Prevents query string tokens from cluttering public URLs
     AWS_QUERYSTRING_AUTH = False 
 
-    # Base URL domains for S3
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-    
-    # Subfolder organization inside the bucket
-    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
-    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+    # S3 only handles Media
+    MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/media/'
+
+    # Whitenoise handles Static locally on the server (Lightning fast, no CORS issues!)
+    STATIC_URL = '/static/'
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
     STORAGES = {
-        # Media files (Admin image uploads go here)
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
                 "location": "media",
             },
         },
-        
-        # Static files (CSS, JS, Admin assets go here)
         "staticfiles": {
-            "BACKEND": "storages.backends.s3.S3Storage",
-            "OPTIONS": {
-                "location": "static",
-            },
+            # Whitenoise automatically compresses and caches assets perfectly
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }

@@ -26,6 +26,7 @@ urlpatterns = [
 
     #6. GET Restaurant menu all items by restaurant-id
     path('restaurants/<uuid:restaurant_id>/menu', views.restaurant_menu, name='restaurant-menu'),
+    path('restaurants/<uuid:restaurant_id>/menucategory',views.restaurant_menu_category, name='restaurant-menucategory'),
 
     #7. Get Restaurants itself by category id
     path('category/restaurants/<str:category_name>',views.restaurants_by_category, name='restaurant-by-category'),
