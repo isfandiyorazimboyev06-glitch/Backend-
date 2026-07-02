@@ -29,6 +29,7 @@ class Restaurant(models.Model):
     id = models.UUIDField(primary_key=True, default = uuid.uuid4, editable=False)
 
     owner_user_id = models.IntegerField(db_index=True) # db_index qidiruvni tezlashtiradi
+
     categories = models.ManyToManyField(
         Category,
         related_name='restaurants',
@@ -38,7 +39,7 @@ class Restaurant(models.Model):
 
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    address = models.URLField(max_length=500)
+    address = models.URLField(max_length=500,blank=True,null=True)
     restaurant_img = models.ImageField(upload_to='restaurant/', blank=True, null=True)
     is_open = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)

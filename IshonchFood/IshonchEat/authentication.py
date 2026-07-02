@@ -16,7 +16,7 @@ class JWTSharedSecretAuthentication(authentication.BaseAuthentication):
             return None 
 
         try:
-            parts = auth_header.split(' ')
+            parts = auth_header.split(' ')  
             if len(parts) != 2:
                 print(" Dropped out: Header does not contain exactly 2 parts (Bearer <token>)")
                 print(f"=== JWT DEBUG END ===")

@@ -207,7 +207,7 @@ def all_restaurants(request):
     if request.method == 'GET':
         # it matches exactly what the RestaurantSerializer requires.
         restaurant = Restaurant.objects.prefetch_related('categories').all()
-        
+
         serializer = RestaurantSerializer(restaurant, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -218,7 +218,7 @@ def all_restaurants(request):
 
         deserializer = RestaurantSerializer(data=request.data)
         deserializer.is_valid(raise_exception=True)
-        deserializer.save()
+        deserializer.save(owner_user_id=request.user.id)
         return Response(deserializer.data, status = status.HTTP_201_CREATED)
 
 
