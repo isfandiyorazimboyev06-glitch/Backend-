@@ -205,17 +205,9 @@ def general_category_detail(request,id):
 @authentication_classes([JWTSharedSecretAuthentication])
 def all_restaurants(request):
     if request.method == 'GET':
-        restaurant = Restaurant.objects.prefetch_related('categories').all().only(
-            'id',
-            'owner_user_id',
-            'name',
-            'description',
-            'address',
-            'restaurant_img',
-            'is_open',
-            'created_at',
-            'phone_number'
-        )
+        # it matches exactly what the RestaurantSerializer requires.
+        restaurant = Restaurant.objects.prefetch_related('categories').all()
+        
         serializer = RestaurantSerializer(restaurant, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -496,9 +488,9 @@ def menuitem_detail(request,id):
 
 @api_view(['GET'])
 #@authentication_classes([JWTSharedSecretAuthentication])
-def restaurant_menu(request, restaurant_id):
+def restaurant_menu(request, restaurant_uuid):
     # 1. Verify that the restaurant exists
-    restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+    restaurant = get_object_or_404(Restaurant, id=restaurant_uuid)
 
     # 2. Filter menu items by spanning across tables:
     # Look at MenuItem -> menu category -> restaurant
@@ -518,9 +510,9 @@ def restaurant_menu(request, restaurant_id):
 )
 @api_view(['GET'])
 #@authentication_classes([JWTSharedSecretAuthentication])
-def restaurant_menu_category(request,restaurant_id):
+def restaurant_menu_category(request,restaurant_uuid):
      # 1. Verify that the restaurant exists
-    restaurant = get_object_or_404(Restaurant,id=restaurant_id)
+    restaurant = get_object_or_404(Restaurant,id=restaurant_uuid)
 
     # 2. Filter menu items by spanning across tables:
     # Look at restaurant -> menu category
@@ -582,9 +574,9 @@ def restaurants_by_category(request,category_name):
 )
 @api_view(['GET'])
 #@authentication_classes([JWTSharedSecretAuthentication])
-def menu_items_by_category(request,restaurant_id,category_menu_name):
+def menu_items_by_category(request,restaurant_uuid,category_menu_name):
     # 1. Safety Check: Verify the restaurant exists
-    restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+    restaurant = get_object_or_404(Restaurant, id=restaurant_uuid)
     
     # 2. Safety Check: Verify the category menu exists using the correct field name ('name')
     category_menu = get_object_or_404(
@@ -610,9 +602,9 @@ def menu_items_by_category(request,restaurant_id,category_menu_name):
 )
 @api_view()
 #@authentication_classes([JWTSharedSecretAuthentication])
-def restaurant_menu_detail(request,restaurant_id):
+def restaurant_menu_detail(request,restaurant_uuid):
     categories = (
-        CategoryMenu.objects.filter(restaurant_id=restaurant_id)
+        CategoryMenu.objects.filter(restaurant_id=restaurant_uuid)
     ).prefetch_related("items")
 
     serializer = CategoryMenuOfMenuCategorySerializer(categories, many=True)

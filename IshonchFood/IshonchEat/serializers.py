@@ -14,12 +14,14 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id','name']
         
 class RestaurantSerializer(serializers.ModelSerializer):
-    categories = CategorySerializer(many=True,read_only=True)
+    #categories = CategorySerializer(many=True,read_only=True)
+    categories = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Category.objects.all()
+    )
     class Meta:
         model = Restaurant
         fields = ['id','owner_user_id','name','description','address','is_open','created_at','restaurant_img','categories']
-        read_only_fields = ['id','created_at','owner_user_id']
-        # owner_user_id ni requestdan emas, tokendan olamiz!
 
 
 class CategoryMenuSerializer(serializers.ModelSerializer):

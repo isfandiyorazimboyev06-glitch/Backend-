@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 import environ
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,11 +24,9 @@ env = environ.Env(
     DEBUG=(bool, False)
 )
 
-# Read the file definitions safely
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+# Read the file definitions safely from the root directory
+environ.Env.read_env(BASE_DIR / ".env")
 
-# Take environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -46,7 +45,7 @@ JWT_ACCESS_SECRET_KEY = str(os.environ.get('JWT_ACCESS_SECRET_KEY', '')).strip("
 
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
+ALLOWED_HOSTS = ['13.60.215.42','*']
 
 
 # Application definition
@@ -184,7 +183,9 @@ SPECTACULAR_SETTINGS = {
         'displayRequestDuration': True, 
         'operationsSorter': 'alpha', 
         'tagsSorter': 'alpha',
-        'docExpansion': 'list',        
+        'docExpansion': 'list',
+        'defaultModelExpandDepth': 3,  # <--- Increases how deep the schema expands by default
+        'defaultModelsExpandDepth': 3, # <--- Expands the section at the bottom of the page        
     },
 
     # Use the default theme stylesheet
@@ -198,7 +199,7 @@ SPECTACULAR_SETTINGS = {
         'https://cdn.jsdelivr.net/npm/swagger-ui-dark-mode-toggle@1.0.1/dist/swagger-ui-dark-mode-toggle.js',
     ],
 
-    # 🌟 FIXED INDENTATION: These are now properly placed INSIDE the dictionary
+    #  FIXED INDENTATION: These are now properly placed INSIDE the dictionary
     'SECURITY': [{'BearerAuth': []}],
     
     'APPEND_COMPONENTS': {
