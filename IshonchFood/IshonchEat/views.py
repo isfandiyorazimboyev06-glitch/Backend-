@@ -213,7 +213,7 @@ def all_restaurants(request):
     
     elif request.method == 'POST':
         # Only admin infrastructure assigns new root restaurants
-        if not request.user.is_authenticated or not request.user.has_perm('user.manage'):
+        if not request.user.is_authenticated or not request.user.has_perm('restaurant.create'):
             return Response({"detail":"Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
         deserializer = RestaurantSerializer(data=request.data)

@@ -50,7 +50,7 @@ class Restaurant(models.Model):
         return self.name
 
     class Meta:
-        ordering=['owner_user_id']
+        ordering=['-created_at']
 
 # Advertisement Banner
 class Advertisement(models.Model):
